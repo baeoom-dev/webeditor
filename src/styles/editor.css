@@ -1,0 +1,452 @@
+/**
+ * 웹 에디터 스타일.
+ * 디자인 토큰(CSS 변수) 기반. 라이트 테마 기본, prefers-color-scheme 로 다크 지원.
+ * 접근성: 포커스 링, 충분한 대비, 축소 모션 대응.
+ */
+.we-editor {
+  --we-bg: #ffffff;
+  --we-fg: #1a1a1a;
+  --we-muted: #6b7280;
+  --we-border: #e2e5e9;
+  --we-border-strong: #cbd0d6;
+  --we-surface: #f7f8fa;
+  --we-surface-hover: #eceef1;
+  --we-accent: #2563eb;
+  --we-accent-soft: #dbeafe;
+  --we-danger: #dc2626;
+  --we-radius: 10px;
+  --we-radius-sm: 6px;
+  --we-shadow: 0 4px 24px rgba(15, 23, 42, 0.12);
+  --we-focus: 0 0 0 3px rgba(37, 99, 235, 0.35);
+  --we-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--we-border);
+  border-radius: var(--we-radius);
+  background: var(--we-bg);
+  color: var(--we-fg);
+  font-family: var(--we-font);
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .we-editor {
+    --we-bg: #16181d;
+    --we-fg: #e8eaed;
+    --we-muted: #9aa2ad;
+    --we-border: #2b2f36;
+    --we-border-strong: #3a3f47;
+    --we-surface: #1e2127;
+    --we-surface-hover: #272b32;
+    --we-accent: #60a5fa;
+    --we-accent-soft: #1e3a5f;
+    --we-shadow: 0 4px 28px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ---------- 툴바 ---------- */
+.we-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  background: var(--we-surface);
+  border-bottom: 1px solid var(--we-border);
+}
+
+.we-toolbar-sep {
+  width: 1px;
+  height: 22px;
+  margin: 0 6px;
+  background: var(--we-border-strong);
+}
+
+.we-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--we-radius-sm);
+  background: transparent;
+  color: var(--we-fg);
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.we-tool-btn:hover {
+  background: var(--we-surface-hover);
+}
+
+.we-tool-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--we-focus);
+}
+
+.we-tool-btn[aria-pressed="true"] {
+  background: var(--we-accent-soft);
+  color: var(--we-accent);
+}
+
+.we-fontsize {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.we-fontsize-select {
+  height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--we-border-strong);
+  border-radius: var(--we-radius-sm);
+  background: var(--we-bg);
+  color: var(--we-fg);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.we-fontsize-select:focus-visible {
+  outline: none;
+  box-shadow: var(--we-focus);
+}
+
+/* ---------- 편집 영역 ---------- */
+.we-editor-content {
+  padding: 16px 18px;
+  outline: none;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.7;
+  font-size: 15px;
+  overflow-y: auto;
+  max-height: 70vh;
+}
+
+.we-editor-content:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--we-accent-soft);
+}
+
+.we-editor-content:empty::before,
+.we-editor-content[data-empty="true"]::before {
+  content: attr(data-placeholder);
+  color: var(--we-muted);
+  pointer-events: none;
+}
+
+.we-editor-content > *:first-child { margin-top: 0; }
+.we-editor-content > *:last-child { margin-bottom: 0; }
+
+.we-editor-content a {
+  color: var(--we-accent);
+  text-decoration: underline;
+}
+
+.we-editor-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--we-radius-sm);
+}
+
+.we-editor-content blockquote {
+  margin: 0.8em 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--we-border-strong);
+  color: var(--we-muted);
+}
+
+/* 표: 붙여넣은 인라인 스타일이 우선하도록 낮은 특정성으로 기본값만 제공 */
+.we-editor-content table {
+  border-collapse: collapse;
+  margin: 0.6em 0;
+}
+
+.we-editor-content th,
+.we-editor-content td {
+  border: 1px solid var(--we-border-strong);
+  padding: 6px 10px;
+  min-width: 40px;
+}
+
+.we-editor-content th {
+  background: var(--we-surface);
+  font-weight: 600;
+}
+
+/* ---------- 소스보기 ---------- */
+.we-source-area {
+  display: block;
+  width: 100%;
+  padding: 16px 18px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  background: var(--we-bg);
+  color: var(--we-fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  tab-size: 2;
+  box-sizing: border-box;
+  max-height: 70vh;
+}
+
+.we-source-area:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--we-accent-soft);
+}
+
+/* display: block 이 hidden 속성(UA 스타일)을 이기지 못하게 명시 */
+.we-source-area[hidden],
+.we-editor-content[hidden] {
+  display: none;
+}
+
+.we-tool-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.we-tool-btn:disabled:hover {
+  background: transparent;
+}
+
+.we-fontsize-select:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---------- 다이얼로그 ---------- */
+.we-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.we-dialog {
+  width: min(440px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--we-bg, #fff);
+  color: var(--we-fg, #1a1a1a);
+  border-radius: 14px;
+  box-shadow: var(--we-shadow);
+  font-family: var(--we-font);
+}
+
+.we-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 10px;
+}
+
+.we-dialog-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.we-dialog-close {
+  display: inline-flex;
+  padding: 6px;
+  border: none;
+  border-radius: var(--we-radius-sm);
+  background: transparent;
+  color: var(--we-muted);
+  cursor: pointer;
+}
+.we-dialog-close:hover { background: var(--we-surface-hover); }
+.we-dialog-close:focus-visible { outline: none; box-shadow: var(--we-focus); }
+
+.we-dialog-body { padding: 4px 18px 18px; }
+
+/* ---------- 폼 ---------- */
+.we-form { display: flex; flex-direction: column; gap: 14px; }
+
+.we-field { display: flex; flex-direction: column; gap: 6px; }
+.we-field-inline { flex-direction: row; align-items: center; gap: 10px; }
+.we-field-inline label { min-width: 32px; }
+
+.we-field label { font-size: 13px; font-weight: 600; color: var(--we-fg); }
+
+.we-field input,
+.we-field-inline input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--we-border-strong);
+  border-radius: var(--we-radius-sm);
+  background: var(--we-bg);
+  color: var(--we-fg);
+  font-size: 14px;
+  font-family: inherit;
+}
+.we-field input:focus-visible {
+  outline: none;
+  border-color: var(--we-accent);
+  box-shadow: var(--we-focus);
+}
+
+.we-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.we-form-error {
+  margin: 0;
+  color: var(--we-danger);
+  font-size: 13px;
+}
+
+.we-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.we-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--we-radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.we-btn:focus-visible { outline: none; box-shadow: var(--we-focus); }
+.we-btn svg { width: 16px; height: 16px; }
+
+.we-btn-primary { background: var(--we-accent); color: #fff; }
+.we-btn-primary:hover { filter: brightness(1.05); }
+
+.we-btn-secondary {
+  background: var(--we-surface);
+  color: var(--we-fg);
+  border-color: var(--we-border-strong);
+}
+.we-btn-secondary:hover { background: var(--we-surface-hover); }
+
+.we-btn-ghost {
+  background: transparent;
+  color: var(--we-danger);
+  margin-right: auto;
+}
+.we-btn-ghost:hover { background: var(--we-surface-hover); }
+
+/* ---------- 이미지 드롭 ---------- */
+.we-image-drop {
+  border: 2px dashed var(--we-border-strong);
+  border-radius: var(--we-radius);
+  padding: 22px;
+  text-align: center;
+  color: var(--we-muted);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+.we-image-drop.is-drag {
+  border-color: var(--we-accent);
+  background: var(--we-accent-soft);
+}
+.we-image-drop-inner { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.we-image-drop-inner svg { width: 28px; height: 28px; color: var(--we-muted); }
+.we-image-drop p { margin: 0; font-size: 13px; }
+
+/* ---------- 색상/이모지 팝오버 ---------- */
+.we-color-popover,
+.we-emoji-popover {
+  z-index: 2147483000;
+  padding: 10px;
+  background: var(--we-bg, #fff);
+  border: 1px solid var(--we-border, #e2e5e9);
+  border-radius: var(--we-radius);
+  box-shadow: var(--we-shadow);
+  font-family: var(--we-font);
+}
+
+.we-color-grid,
+.we-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+
+.we-color-swatch {
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+}
+.we-color-swatch:focus-visible { outline: none; box-shadow: var(--we-focus); }
+
+.we-color-custom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--we-border);
+  font-size: 13px;
+}
+.we-color-custom input[type="color"] {
+  width: 32px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--we-border-strong);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+
+.we-emoji-cell {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.we-emoji-cell:hover { background: var(--we-surface-hover); }
+.we-emoji-cell:focus-visible { outline: none; box-shadow: var(--we-focus); }
+
+.we-table-size {
+  font-size: 13px;
+  color: var(--we-muted);
+  text-align: center;
+}
+
+/* ---------- 유틸 ---------- */
+.we-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .we-editor * { transition: none !important; }
+}

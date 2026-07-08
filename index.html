@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebEditor — Vanilla JS WYSIWYG</title>
+  <link rel="stylesheet" href="./src/styles/editor.css" />
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      color: #1a1a1a;
+      background: #fbfbfc;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { color: #e8eaed; background: #0f1115; }
+    }
+    h1 { font-size: 24px; margin-bottom: 4px; }
+    .sub { color: #6b7280; margin-top: 0; margin-bottom: 24px; font-size: 14px; }
+    .actions { display: flex; gap: 8px; margin-top: 16px; }
+    .actions button {
+      padding: 8px 14px; border-radius: 6px; border: 1px solid #cbd0d6;
+      background: #fff; cursor: pointer; font-size: 14px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .actions button { background: #1e2127; color: #e8eaed; border-color: #3a3f47; }
+    }
+    pre {
+      margin-top: 16px; padding: 14px; border-radius: 8px;
+      background: #16181d; color: #d6e2f0; overflow-x: auto; font-size: 12.5px;
+      white-space: pre-wrap; word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <h1>WebEditor</h1>
+  <p class="sub">Vanilla JS · SVG 아이콘 · 화이트리스트 새니타이저 · 웹접근성 · 엑셀 표 붙여넣기</p>
+
+  <main>
+    <div id="editor" aria-label="예시 에디터"></div>
+
+    <div class="actions">
+      <button type="button" id="btn-html">HTML 출력(새니타이즈)</button>
+      <button type="button" id="btn-clear">비우기</button>
+    </div>
+
+    <pre id="output" aria-live="polite" hidden></pre>
+  </main>
+
+  <script type="module">
+    import { createEditor } from './src/index.js';
+
+    const editor = createEditor('#editor', {
+      placeholder: '여기에 내용을 입력하거나 엑셀 표를 붙여넣어 보세요…',
+      initialHTML: '<p>안녕하세요 👋 <strong>굵게</strong>, <em>기울임</em>, ' +
+        '<span style="color:#dc2626">색상</span> 을 시험해 보세요.</p>',
+      // 실제 업로드 API 예시 (미설정 시 data URL 로 인라인):
+      // uploadImage: async (file) => {
+      //   const form = new FormData();
+      //   form.append('file', file);
+      //   const res = await fetch('/api/upload', { method: 'POST', body: form });
+      //   const { url } = await res.json();
+      //   return url;
+      // },
+    });
+
+    const output = document.getElementById('output');
+    document.getElementById('btn-html').addEventListener('click', () => {
+      output.hidden = false;
+      output.textContent = editor.getHTML();
+    });
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      editor.setHTML('');
+      editor.focus();
+    });
+
+    window.__editor = editor; // 디버깅용
+  </script>
+</body>
+</html>

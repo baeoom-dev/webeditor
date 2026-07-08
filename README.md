@@ -1,0 +1,145 @@
+# WebEditor
+
+의존성 없는 **Vanilla JS WYSIWYG 웹 에디터**. 보안(XSS 방지)과 웹접근성을 최우선으로 설계했고,
+엑셀/스프레드시트 표를 붙여넣을 때 색·테두리·굵기 등 서식을 최대한 보존한다.
+
+```
+빌드 불필요 · ES Modules · SVG 아이콘 · 화이트리스트 새니타이저 · WAI-ARIA
+```
+
+## 빠른 시작
+
+```html
+<link rel="stylesheet" href="./src/styles/editor.css" />
+<div id="editor"></div>
+
+<script type="module">
+  import { createEditor } from './src/index.js';
+
+  const editor = createEditor('#editor', {
+    placeholder: '내용을 입력하세요…',
+    uploadImage: async (file) => {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: form });
+      const { url } = await res.json();
+      return url; // 삽입할 이미지 URL 을 반환
+    },
+  });
+
+  // 저장 시: 항상 새니타이즈된 안전한 HTML 을 반환
+  const html = editor.getHTML();
+</script>
+```
+
+## 기능
+
+| 그룹 | 기능 |
+|---|---|
+| 인라인 서식 | 굵게, 기울임, 밑줄, 취소선 |
+| 글자 | 글자 크기, 글자 색, 배경 색 |
+| 목록 | 글머리 기호(UL), 번호(OL), 들여쓰기, 내어쓰기 |
+| 정렬 | 왼쪽 / 가운데 / 오른쪽 / 양쪽 |
+| 삽입 | 링크, 이미지, 표, 이모지 |
+| 유틸 | 서식 지우기, HTML 소스 보기, 실행 취소/다시 실행 |
+
+### 이미지 첨부 (3가지 경로)
+
+1. **붙여넣기** — 클립보드의 이미지를 붙여넣으면 자동 업로드 후 삽입
+2. **URL 입력** — 이미지 주소를 직접 입력 (스킴 검증)
+3. **파일 업로드** — 파일 선택 또는 드래그 앤 드롭
+
+`uploadImage` 핸들러를 설정하면 그 API 로 업로드하고, 없으면 `data:` URL(base64)로 인라인한다
+(`allowDataUrlFallback: false` 로 비활성화 가능).
+
+## 설정 옵션
+
+| 옵션 | 기본값 | 설명 |
+|---|---|---|
+| `uploadImage` | — | `async (file) => url` 업로드 API |
+| `allowDataUrlFallback` | `true` | 업로드 핸들러 없을 때 data URL 사용 |
+| `maxImageSizeMB` | `10` | 이미지 최대 크기 |
+| `placeholder` | `'내용을 입력하세요…'` | 빈 상태 안내문 |
+| `initialHTML` | — | 초기 내용(새니타이즈됨) |
+| `ariaLabel` | `'본문 편집기'` | 편집 영역 접근성 라벨 |
+| `minHeight` | `240` | 최소 높이(px) |
+| `fontSizes` | `['12px'…'32px']` | 글자 크기 목록 |
+| `features` | 전체 | 활성화할 기능 이름 배열 |
+| `onChange` | — | `(editor) => void` 변경 콜백 |
+
+## 공개 API
+
+```js
+editor.getHTML();          // 새니타이즈된 안전한 HTML
+editor.getText();          // 순수 텍스트
+editor.setHTML(html);      // 새니타이즈 후 내용 설정
+editor.focus();
+editor.destroy();          // DOM 제거 + 리스너 해제
+```
+
+## 보안
+
+`src/security/` 의 **DOM 기반 화이트리스트 새니타이저**가 신뢰할 수 없는 모든 입력
+(붙여넣기, `setHTML`, `getHTML`)을 통과시킨다. 정규식이 아니라 브라우저 파서로
+비활성(inert) `<template>` 문서를 만든 뒤 노드를 순회한다 — 새니타이즈 과정에서
+이미지/스크립트가 로드되지 않는다.
+
+차단하는 대표 벡터:
+
+- `<script>`, `<iframe>`, `<object>`, `<svg onload>` 등 위험 태그 제거
+- `onerror`, `onclick` 등 모든 `on*` 이벤트 핸들러 제거
+- `javascript:` / `vbscript:` / `data:text/html` URL 차단 (제어문자 우회 포함)
+- CSS `url()`, `expression()`, `@import` 값 폐기
+- 외부 링크(`target="_blank"`)에 `rel="noopener noreferrer"` 강제
+
+허용 정책은 `src/security/schema.js` 한 곳에서 관리한다.
+
+## 엑셀 표 붙여넣기
+
+엑셀/워드는 클립보드에 "표 스크린샷 이미지"와 "HTML 표"를 **함께** 넣는다.
+이 에디터는 HTML 을 우선 사용하므로 표가 그림이 아닌 **편집 가능한 표**로 붙는다
+(HTML 이 없는 순수 스크린샷 붙여넣기는 이미지로 처리).
+
+인라인 스타일 중 **안전한 CSS 속성만**
+(`color`, `background(-color)`, `border*`, `font-weight`, `text-align` 등) 화이트리스트로
+보존한다. `align`/`bgcolor` 같은 레거시 속성은 안전한 `style` 로 자동 변환한다.
+
+## 소스 보기
+
+툴바의 `<>` 버튼으로 HTML 소스를 직접 편집할 수 있다.
+소스 → 편집기로 복귀할 때 **반드시 새니타이저를 통과**하므로 소스 모드에서
+스크립트/이벤트 핸들러를 넣어도 저장되지 않는다. `editor.toggleSource(force?)` API 로도 제어 가능.
+
+## 웹접근성
+
+- 툴바: `role="toolbar"` + roving tabindex(방향키 이동), 토글 버튼 `aria-pressed`
+- 편집 영역: `role="textbox"`, `aria-multiline`, `aria-label`
+- 다이얼로그: `role="dialog"` + `aria-modal`, 포커스 트랩, `Esc` 닫기, 포커스 복원
+- 색상/이모지 팝오버: `role="grid"` + 방향키 이동
+- 이미지 대체 텍스트(alt) 입력 지원
+- `prefers-reduced-motion` 대응, 포커스 링 제공
+
+## 브라우저 지원
+
+최신 Chrome / Firefox / Safari. 서식 명령은 `document.execCommand` 기반이다
+(deprecated 이나 모든 상용 브라우저에서 안정적으로 동작하며, 순수 vanilla 로
+리치텍스트 엔진을 직접 구현하는 것보다 신뢰성이 높다).
+
+## 디렉토리 구조
+
+```
+src/
+├── core/          Editor, Selection, commands
+├── ui/            Toolbar, Dialog, ColorPicker, EmojiPicker, icons
+├── features/      link, image, table
+├── clipboard/     paste (엑셀 표 보존)
+├── security/      sanitizer, schema
+└── styles/        editor.css
+```
+
+## 데모
+
+```bash
+python3 -m http.server 8791
+# http://localhost:8791 접속
+```
