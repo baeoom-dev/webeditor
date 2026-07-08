@@ -15,7 +15,7 @@ import { openLinkDialog } from '../features/link.js';
 import { openImageDialog, insertImageFile } from '../features/image.js';
 import { openTableDialog } from '../features/table.js';
 import { TableToolbar } from '../features/table-edit.js';
-import { toggleInlineCode, insertCodeBlock } from '../features/code.js';
+import { toggleInlineCode, insertCodeBlock, handleCodeBlockEnter } from '../features/code.js';
 import { handlePaste } from '../clipboard/paste.js';
 import { sanitizeHtml } from '../security/sanitizer.js';
 
@@ -424,6 +424,11 @@ export class Editor {
     document.addEventListener('selectionchange', this._onSelectionChange);
 
     this.content.addEventListener('input', () => this._emitChange());
+
+    // 코드 블록 안의 Enter 는 <code> 를 쪼개지 않고 줄바꿈으로 처리.
+    this.content.addEventListener('keydown', (e) => {
+      if (handleCodeBlockEnter(e, this.content)) this._emitChange();
+    });
 
     this.content.addEventListener('paste', (e) => {
       handlePaste(e, this._ctx());
