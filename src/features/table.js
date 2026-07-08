@@ -68,11 +68,16 @@ export function openTableDialog(ctx) {
 
       const actions = document.createElement('div');
       actions.className = 'we-form-actions';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'we-btn we-btn-secondary';
+      cancel.textContent = '취소';
+      cancel.addEventListener('click', () => close());
       const submit = document.createElement('button');
       submit.type = 'submit';
       submit.className = 'we-btn we-btn-primary';
       submit.innerHTML = `${icons.check}<span>삽입</span>`;
-      actions.appendChild(submit);
+      actions.append(cancel, submit);
 
       function updatePreview() {
         preview.textContent = `${state.rows} 행 × ${state.cols} 열`;

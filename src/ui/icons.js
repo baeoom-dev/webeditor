@@ -37,4 +37,14 @@ export const icons = {
   redo: svg('<path d="M21 7v6h-6"/><path d="M21 13a9 9 0 1 0-3 7"/>'),
   check: svg('<polyline points="20 6 9 17 4 12"/>'),
   close: svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
+  // 표 편집.
+  rowInsertAbove: svg('<rect x="3" y="12" width="18" height="8" rx="1"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="12" y1="3" x2="12" y2="9"/><line x1="9" y1="6" x2="15" y2="6"/>'),
+  rowInsertBelow: svg('<rect x="3" y="4" width="18" height="8" rx="1"/><line x1="3" y1="8" x2="21" y2="8"/><line x1="12" y1="15" x2="12" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/>'),
+  rowDelete: svg('<rect x="3" y="9" width="18" height="6" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="16" y1="3" x2="22" y2="3"/>'),
+  colInsertLeft: svg('<rect x="12" y="3" width="8" height="18" rx="1"/><line x1="16" y1="3" x2="16" y2="21"/><line x1="3" y1="12" x2="9" y2="12"/><line x1="6" y1="9" x2="6" y2="15"/>'),
+  colInsertRight: svg('<rect x="4" y="3" width="8" height="18" rx="1"/><line x1="8" y1="3" x2="8" y2="21"/><line x1="15" y1="12" x2="21" y2="12"/><line x1="18" y1="9" x2="18" y2="15"/>'),
+  colDelete: svg('<rect x="9" y="3" width="6" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="16" x2="3" y2="22"/>'),
+  mergeCells: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="20"/><polyline points="8 10 10 12 8 14"/><polyline points="16 10 14 12 16 14"/>'),
+  splitCell: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="20"/><polyline points="7 9 5 12 7 15"/><polyline points="17 9 19 12 17 15"/>'),
+  trash: svg('<path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>'),
 };

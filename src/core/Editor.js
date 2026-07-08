@@ -14,6 +14,7 @@ import { Dialog } from '../ui/Dialog.js';
 import { openLinkDialog } from '../features/link.js';
 import { openImageDialog, insertImageFile } from '../features/image.js';
 import { openTableDialog } from '../features/table.js';
+import { TableToolbar } from '../features/table-edit.js';
 import { handlePaste } from '../clipboard/paste.js';
 import { sanitizeHtml } from '../security/sanitizer.js';
 
@@ -85,6 +86,14 @@ export class Editor {
 
     root.appendChild(this.container);
 
+    // 표 컨텍스트 툴바(표 기능이 켜져 있을 때만).
+    if (this.config.features.includes('table')) {
+      this._tableToolbar = new TableToolbar({
+        root: this.content,
+        onChange: () => this._emitChange(),
+      });
+    }
+
     if (this.config.initialHTML) this.setHTML(this.config.initialHTML);
 
     this._bindEvents();
@@ -126,6 +135,7 @@ export class Editor {
     if (next) {
       // WYSIWYG → 소스: 새니타이즈된 HTML 을 보기 좋게 넣는다.
       this.sourceArea.value = this._formatHtml(sanitizeHtml(this.content.innerHTML));
+      this._tableToolbar?.hide();
       this.content.hidden = true;
       this.sourceArea.hidden = false;
       this.toolbar.setDisabled(true, ['sourceView']);
@@ -164,6 +174,7 @@ export class Editor {
   destroy() {
     document.removeEventListener('selectionchange', this._onSelectionChange);
     for (const p of this._pickers) p.close();
+    this._tableToolbar?.destroy();
     this.container.remove();
   }
 
@@ -344,6 +355,7 @@ export class Editor {
   _bindEvents() {
     this._onSelectionChange = () => {
       if (this.selection.getRange()) this._updateToolbar();
+      if (this._tableToolbar && !this._sourceMode) this._tableToolbar.sync();
     };
     document.addEventListener('selectionchange', this._onSelectionChange);
 

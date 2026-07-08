@@ -60,9 +60,10 @@ export function openLinkDialog(ctx) {
         });
         actions.appendChild(removeBtn);
       }
+      const cancel = button('취소', 'we-btn-secondary', () => close());
       const submit = button('적용', 'we-btn-primary', null, 'submit');
       submit.innerHTML = `${icons.check}<span>적용</span>`;
-      actions.appendChild(submit);
+      actions.append(cancel, submit);
 
       form.append(textField.wrap, urlField.wrap, newTab, error, actions);
 

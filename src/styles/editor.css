@@ -3,7 +3,11 @@
  * 디자인 토큰(CSS 변수) 기반. 라이트 테마 기본, prefers-color-scheme 로 다크 지원.
  * 접근성: 포커스 링, 충분한 대비, 축소 모션 대응.
  */
-.we-editor {
+/* 디자인 토큰. 다이얼로그·표 툴바는 body 직속으로 렌더되므로 .we-editor 바깥에서도
+   토큰을 상속받도록 함께 스코프에 포함한다. */
+.we-editor,
+.we-dialog-overlay,
+.we-table-toolbar {
   --we-bg: #ffffff;
   --we-fg: #1a1a1a;
   --we-muted: #6b7280;
@@ -20,7 +24,9 @@
   --we-focus: 0 0 0 3px rgba(37, 99, 235, 0.35);
   --we-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
 
+.we-editor {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--we-border);
@@ -32,7 +38,9 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .we-editor {
+  .we-editor,
+  .we-dialog-overlay,
+  .we-table-toolbar {
     --we-bg: #16181d;
     --we-fg: #e8eaed;
     --we-muted: #9aa2ad;
@@ -432,6 +440,65 @@
   font-size: 13px;
   color: var(--we-muted);
   text-align: center;
+}
+
+/* ---------- 표 컨텍스트 툴바 ---------- */
+.we-table-toolbar {
+  position: absolute;
+  z-index: 1100;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 4px;
+  border: 1px solid var(--we-border);
+  border-radius: var(--we-radius);
+  background: var(--we-bg);
+  box-shadow: var(--we-shadow);
+  font-family: var(--we-font);
+}
+.we-table-toolbar[hidden] { display: none; }
+
+.we-table-toolbar-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 4px;
+  background: var(--we-border-strong);
+}
+
+.we-table-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: var(--we-radius-sm);
+  background: transparent;
+  color: var(--we-fg);
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.we-table-tool svg { width: 18px; height: 18px; }
+.we-table-tool:hover { background: var(--we-surface-hover); }
+.we-table-tool:focus-visible { outline: none; box-shadow: var(--we-focus); }
+
+/* 드래그로 표 셀을 선택하는 동안 텍스트 선택을 끈다. */
+.we-editor-content table.we-selecting { user-select: none; }
+
+/* 셀 단위 선택 하이라이트: 셀 고유 배경을 가리지 않는 반투명 오버레이 + 강조 링. */
+.we-editor-content td.we-cell-selected,
+.we-editor-content th.we-cell-selected {
+  box-shadow: inset 0 0 0 2px var(--we-accent);
+}
+@supports (background: color-mix(in srgb, red, blue)) {
+  .we-editor-content td.we-cell-selected,
+  .we-editor-content th.we-cell-selected {
+    background-image: linear-gradient(
+      color-mix(in srgb, var(--we-accent) 16%, transparent),
+      color-mix(in srgb, var(--we-accent) 16%, transparent)
+    );
+  }
 }
 
 /* ---------- 유틸 ---------- */

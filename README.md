@@ -74,6 +74,7 @@ pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
 | 목록 | 글머리 기호(UL), 번호(OL), 들여쓰기, 내어쓰기 |
 | 정렬 | 왼쪽 / 가운데 / 오른쪽 / 양쪽 |
 | 삽입 | 링크, 이미지, 표, 이모지 |
+| 표 편집 | 행/열 추가·삭제, 셀 병합/분할, 셀 배경·글자색·정렬 |
 | 유틸 | 서식 지우기, HTML 소스 보기, 실행 취소/다시 실행 |
 
 ### 이미지 첨부 (3가지 경로)
@@ -137,6 +138,29 @@ editor.destroy();          // DOM 제거 + 리스너 해제
 (`color`, `background(-color)`, `border*`, `font-weight`, `text-align` 등) 화이트리스트로
 보존한다. `align`/`bgcolor` 같은 레거시 속성은 안전한 `style` 로 자동 변환한다.
 
+## 표 편집
+
+편집 중 커서를 표 셀 안에 두면 표 위에 **컨텍스트 툴바**가 떠오른다.
+
+| 그룹 | 도구 |
+|---|---|
+| 행 | 위에 행 추가 / 아래에 행 추가 / 행 삭제 |
+| 열 | 왼쪽에 열 추가 / 오른쪽에 열 추가 / 열 삭제 |
+| 셀 | 셀 병합 / 셀 분할 |
+| 서식 | 셀 배경색 / 글자색 / 왼쪽·가운데·오른쪽 정렬 |
+| 표 | 표 삭제 |
+
+- **셀 선택**: 한 셀에서 다른 셀로 **드래그**하면 사각형 범위가 강조 표시된다.
+  (contenteditable 기본 텍스트 선택 대신 셀 단위 선택을 직접 구현 — 병합/서식 대상이 된다.)
+  여러 셀을 선택한 뒤 **셀 병합**을 누르거나 배경·글자색·정렬을 적용하면 일괄 적용된다.
+- `colspan`/`rowspan` 은 가상 그리드로 매핑해 정확히 처리한다 — 병합 셀을 가로지르는
+  행/열 삽입은 span 을 자동 확장하고, 병합 셀이 걸친 행 삭제는 아래로 밀어낸다.
+- 셀 서식은 인라인 `style`(배경·글자색·정렬)로 적용되며 새니타이저 화이트리스트를 통과한다.
+- 접근성: 컨텍스트 툴바도 `role="toolbar"` + roving tabindex(방향키 이동)를 따른다.
+
+> 구조 편집은 DOM 을 직접 변형하므로 브라우저 네이티브 `Ctrl+Z`(execCommand undo)에는
+> 기록되지 않는다(표 삽입과 동일). 표 삽입 자체와 마찬가지 제약이다.
+
 ## 소스 보기
 
 툴바의 `<>` 버튼으로 HTML 소스를 직접 편집할 수 있다.
@@ -164,7 +188,7 @@ editor.destroy();          // DOM 제거 + 리스너 해제
 src/
 ├── core/          Editor, Selection, commands
 ├── ui/            Toolbar, Dialog, ColorPicker, EmojiPicker, icons
-├── features/      link, image, table
+├── features/      link, image, table, table-edit(컨텍스트 툴바), table-ops(그리드 연산)
 ├── clipboard/     paste (엑셀 표 보존)
 ├── security/      sanitizer, schema
 └── styles/        editor.css
