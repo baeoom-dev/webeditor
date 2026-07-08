@@ -22,7 +22,7 @@ const DEFAULT_FONT_SIZES = ['12px', '14px', '16px', '18px', '24px', '32px'];
 const DEFAULT_FEATURES = [
   'bold', 'italic', 'underline', 'strikethrough', 'fontSize', 'color', 'backColor',
   'ul', 'ol', 'align', 'outdent', 'indent', 'link', 'image', 'table', 'emoji',
-  'removeFormat', 'sourceView', 'undo', 'redo',
+  'removeFormat', 'sourceView', 'theme', 'undo', 'redo',
 ];
 
 export class Editor {
@@ -50,10 +50,18 @@ export class Editor {
       placeholder: '내용을 입력하세요…',
       ariaLabel: '본문 편집기',
       minHeight: 240,
+      theme: 'auto',
       fontSizes: DEFAULT_FONT_SIZES,
       features: DEFAULT_FEATURES,
       ...config,
     };
+
+    // 시스템 테마 감지(auto 모드에서 실시간 추종).
+    this._mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    this._onSystemTheme = () => {
+      if (this.config.theme === 'auto') this._applyTheme();
+    };
+    this._mql?.addEventListener?.('change', this._onSystemTheme);
 
     this.container = document.createElement('div');
     this.container.className = 'we-editor';
@@ -93,6 +101,8 @@ export class Editor {
         onChange: () => this._emitChange(),
       });
     }
+
+    this._applyTheme();
 
     if (this.config.initialHTML) this.setHTML(this.config.initialHTML);
 
@@ -155,6 +165,45 @@ export class Editor {
     }
   }
 
+  /** 테마를 설정한다: 'auto' | 'light' | 'dark'. */
+  setTheme(theme) {
+    this.config.theme = theme === 'light' || theme === 'dark' ? theme : 'auto';
+    this._applyTheme();
+  }
+
+  /** 현재 설정된 테마('auto'|'light'|'dark')를 반환한다. */
+  getTheme() {
+    return this.config.theme;
+  }
+
+  /** 실제 표시 테마('light'|'dark'). auto 는 시스템 설정으로 해석한다. */
+  _effectiveTheme() {
+    const t = this.config.theme;
+    if (t === 'light' || t === 'dark') return t;
+    return this._mql?.matches ? 'dark' : 'light';
+  }
+
+  /** 현재 테마를 편집 영역(인스턴스별)과 body 직속 팝오버(전역)에 stamp 한다. */
+  _applyTheme() {
+    const effective = this._effectiveTheme();
+    this.container.setAttribute('data-theme', effective);
+    // 다이얼로그·팝오버·표 툴바는 body 직속이라 전역 html 속성으로 테마를 전달한다.
+    document.documentElement.setAttribute('data-we-theme', effective);
+    this._updateThemeButton(effective);
+  }
+
+  /** 테마 토글 버튼의 아이콘·라벨·상태를 갱신한다. */
+  _updateThemeButton(effective) {
+    const btn = this.toolbar.getButton('theme');
+    if (!btn) return;
+    const toDark = effective !== 'dark';
+    btn.innerHTML = toDark ? icons.moon : icons.sun;
+    const label = toDark ? '다크 모드로 전환' : '라이트 모드로 전환';
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('title', label);
+    btn.setAttribute('aria-pressed', effective === 'dark' ? 'true' : 'false');
+  }
+
   /** 소스 textarea 내용을 새니타이즈해 본문에 반영한다. */
   _syncFromSource() {
     this.content.innerHTML = sanitizeHtml(this.sourceArea.value);
@@ -173,6 +222,7 @@ export class Editor {
   /** 편집기를 DOM 에서 제거하고 리스너를 해제한다. */
   destroy() {
     document.removeEventListener('selectionchange', this._onSelectionChange);
+    this._mql?.removeEventListener?.('change', this._onSystemTheme);
     for (const p of this._pickers) p.close();
     this._tableToolbar?.destroy();
     this.container.remove();
@@ -268,6 +318,15 @@ export class Editor {
         label: 'HTML 소스 보기',
         toggle: true,
         action: () => this.toggleSource(),
+      });
+    }
+    if (has('theme')) {
+      utilGroup.push({
+        name: 'theme',
+        icon: icons.moon,
+        label: '다크 모드로 전환',
+        toggle: true,
+        action: () => this.setTheme(this._effectiveTheme() === 'dark' ? 'light' : 'dark'),
       });
     }
     if (has('undo')) utilGroup.push(this._item('undo', icons.undo, '실행 취소 (Ctrl+Z)', () => this._run(commands.undo)));

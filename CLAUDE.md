@@ -87,6 +87,19 @@ schema 화이트리스트로 남긴다. `align`/`bgcolor` 같은 레거시 속�
   이미 schema 화이트리스트에 있으므로 getHTML() 새니타이즈를 통과한다. 새 서식 속성을
   추가하려면 먼저 `schema.js` 의 `ALLOWED_STYLES` 에 등록해야 유지된다.
 
+### 테마(라이트/다크)
+
+- 색상은 전부 CSS 토큰(`--we-*`)이다. 다크 팔레트는 `editor.css` 의 단일 블록에 있고,
+  두 셀렉터로 활성화된다: 편집 영역 `.we-editor[data-theme="dark"]`(인스턴스별),
+  body 직속 팝오버/툴바 `html[data-we-theme="dark"]`(전역).
+- **왜 전역 `html` 속성인가**: 다이얼로그·색상/이모지 팝오버·표 툴바는 모두 `document.body`
+  직속으로 렌더돼 `.we-editor` 스코프 밖이다. 이들에 테마를 전달하려고 `Editor._applyTheme()`
+  가 `document.documentElement` 에 `data-we-theme` 를 stamp 한다. 그래서 테마는 사실상
+  페이지 전역이다(다중 인스턴스 시 팝오버 테마는 마지막 설정값 공유).
+- 테마는 순수 CSS 미디어쿼리가 아니라 **JS 가 명시적으로 stamp** 한다. `theme: 'auto'` 이면
+  `matchMedia('(prefers-color-scheme: dark)')` 를 해석해 stamp 하고 시스템 변경을 추종한다.
+  새 body-직속 UI 를 추가하면 `editor.css` 의 토큰 스코프와 다크 블록 셀렉터 목록에 반드시 추가할 것.
+
 ## 코드 규칙
 
 - 순수 Vanilla JS(ESM). 런타임 의존성을 추가하지 말 것 — devDependency 는 esbuild 뿐.

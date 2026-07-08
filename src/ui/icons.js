@@ -37,6 +37,8 @@ export const icons = {
   redo: svg('<path d="M21 7v6h-6"/><path d="M21 13a9 9 0 1 0-3 7"/>'),
   check: svg('<polyline points="20 6 9 17 4 12"/>'),
   close: svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
+  moon: svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
+  sun: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
   // 표 편집.
   rowInsertAbove: svg('<rect x="3" y="12" width="18" height="8" rx="1"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="12" y1="3" x2="12" y2="9"/><line x1="9" y1="6" x2="15" y2="6"/>'),
   rowInsertBelow: svg('<rect x="3" y="4" width="18" height="8" rx="1"/><line x1="3" y1="8" x2="21" y2="8"/><line x1="12" y1="15" x2="12" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/>'),

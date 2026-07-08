@@ -75,7 +75,8 @@ pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
 | 정렬 | 왼쪽 / 가운데 / 오른쪽 / 양쪽 |
 | 삽입 | 링크, 이미지, 표, 이모지 |
 | 표 편집 | 행/열 추가·삭제, 셀 병합/분할, 셀 배경·글자색·정렬 |
-| 유틸 | 서식 지우기, HTML 소스 보기, 실행 취소/다시 실행 |
+| 보기 | 다크 모드 토글, HTML 소스 보기 |
+| 유틸 | 서식 지우기, 실행 취소/다시 실행 |
 
 ### 이미지 첨부 (3가지 경로)
 
@@ -97,6 +98,7 @@ pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
 | `initialHTML` | — | 초기 내용(새니타이즈됨) |
 | `ariaLabel` | `'본문 편집기'` | 편집 영역 접근성 라벨 |
 | `minHeight` | `240` | 최소 높이(px) |
+| `theme` | `'auto'` | 테마: `'auto'`(시스템 추종) / `'light'` / `'dark'` |
 | `fontSizes` | `['12px'…'32px']` | 글자 크기 목록 |
 | `features` | 전체 | 활성화할 기능 이름 배열 |
 | `onChange` | — | `(editor) => void` 변경 콜백 |
@@ -107,6 +109,9 @@ pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
 editor.getHTML();          // 새니타이즈된 안전한 HTML
 editor.getText();          // 순수 텍스트
 editor.setHTML(html);      // 새니타이즈 후 내용 설정
+editor.setTheme('dark');   // 'auto' | 'light' | 'dark'
+editor.getTheme();         // 현재 설정된 테마
+editor.toggleSource();     // HTML 소스보기 토글
 editor.focus();
 editor.destroy();          // DOM 제거 + 리스너 해제
 ```
@@ -166,6 +171,25 @@ editor.destroy();          // DOM 제거 + 리스너 해제
 툴바의 `<>` 버튼으로 HTML 소스를 직접 편집할 수 있다.
 소스 → 편집기로 복귀할 때 **반드시 새니타이저를 통과**하므로 소스 모드에서
 스크립트/이벤트 핸들러를 넣어도 저장되지 않는다. `editor.toggleSource(force?)` API 로도 제어 가능.
+
+## 테마 (라이트/다크)
+
+기본은 `theme: 'auto'` 로 **시스템 설정(`prefers-color-scheme`)을 실시간 추종**한다.
+툴바의 해/달 아이콘으로 라이트↔다크를 **수동 토글**하거나, 코드로 지정할 수 있다.
+
+```js
+const editor = createEditor('#editor', { theme: 'dark' }); // 'auto'|'light'|'dark'
+editor.setTheme('light');
+editor.getTheme();
+```
+
+- 테마는 편집 영역엔 `.we-editor[data-theme]`, 다이얼로그·팝오버·표 툴바(모두 `body` 직속)엔
+  전역 `html[data-we-theme]` 로 stamp 된다 — 팝오버까지 일관된 테마가 적용된다.
+- 색상은 CSS 토큰(`--we-*`)으로 정의되므로, 소비자가 토큰만 재정의해 브랜드 팔레트로 바꿀 수 있다.
+- `'theme'` 를 `features` 에서 빼면 토글 버튼을 숨길 수 있다(그래도 `setTheme` API 는 동작).
+
+> 참고: `html[data-we-theme]` 는 페이지 전역이므로, 한 페이지에 에디터가 여러 개면
+> 팝오버 테마는 마지막으로 설정한 값을 공유한다(편집 영역 색은 인스턴스별로 유지).
 
 ## 웹접근성
 

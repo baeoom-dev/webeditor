@@ -21,13 +21,16 @@ export interface EditorConfig {
   ariaLabel?: string;
   /** 편집 영역 최소 높이 px (기본 240) */
   minHeight?: number;
+  /** 테마 (기본 'auto' — 시스템 설정 추종) */
+  theme?: 'auto' | 'light' | 'dark';
   /** 글자 크기 목록 (기본 ['12px','14px','16px','18px','24px','32px']) */
   fontSizes?: string[];
   /**
    * 활성화할 기능 목록. 기본은 전체.
    * 'bold' | 'italic' | 'underline' | 'strikethrough' | 'fontSize' | 'color'
    * | 'backColor' | 'ul' | 'ol' | 'align' | 'outdent' | 'indent' | 'link'
-   * | 'image' | 'table' | 'emoji' | 'removeFormat' | 'sourceView' | 'undo' | 'redo'
+   * | 'image' | 'table' | 'emoji' | 'removeFormat' | 'sourceView' | 'theme'
+   * | 'undo' | 'redo'
    */
   features?: string[];
   /** 내용 변경 콜백 */
@@ -53,6 +56,10 @@ export class Editor {
   focus(): void;
   /** HTML 소스보기 모드를 켜고 끈다 */
   toggleSource(force?: boolean): void;
+  /** 테마를 설정한다: 'auto' | 'light' | 'dark' */
+  setTheme(theme: 'auto' | 'light' | 'dark'): void;
+  /** 현재 설정된 테마를 반환한다 */
+  getTheme(): 'auto' | 'light' | 'dark';
   /** 에디터를 DOM 에서 제거하고 리스너를 해제한다 */
   destroy(): void;
 }

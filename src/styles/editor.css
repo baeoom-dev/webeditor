@@ -3,11 +3,13 @@
  * 디자인 토큰(CSS 변수) 기반. 라이트 테마 기본, prefers-color-scheme 로 다크 지원.
  * 접근성: 포커스 링, 충분한 대비, 축소 모션 대응.
  */
-/* 디자인 토큰. 다이얼로그·표 툴바는 body 직속으로 렌더되므로 .we-editor 바깥에서도
-   토큰을 상속받도록 함께 스코프에 포함한다. */
+/* 디자인 토큰. 다이얼로그·표 툴바·팝오버는 body 직속으로 렌더되므로 .we-editor
+   바깥에서도 토큰을 상속받도록 함께 스코프에 포함한다. */
 .we-editor,
 .we-dialog-overlay,
-.we-table-toolbar {
+.we-table-toolbar,
+.we-color-popover,
+.we-emoji-popover {
   --we-bg: #ffffff;
   --we-fg: #1a1a1a;
   --we-muted: #6b7280;
@@ -37,21 +39,27 @@
   overflow: hidden;
 }
 
-@media (prefers-color-scheme: dark) {
-  .we-editor,
-  .we-dialog-overlay,
-  .we-table-toolbar {
-    --we-bg: #16181d;
-    --we-fg: #e8eaed;
-    --we-muted: #9aa2ad;
-    --we-border: #2b2f36;
-    --we-border-strong: #3a3f47;
-    --we-surface: #1e2127;
-    --we-surface-hover: #272b32;
-    --we-accent: #60a5fa;
-    --we-accent-soft: #1e3a5f;
-    --we-shadow: 0 4px 28px rgba(0, 0, 0, 0.5);
-  }
+/* 다크 팔레트.
+   테마는 JS(Editor)가 명시적으로 stamp 한다:
+   - 편집 영역: .we-editor[data-theme="dark"] (인스턴스별)
+   - body 직속 팝오버/툴바: html[data-we-theme="dark"] (페이지 전역)
+   config.theme === 'auto' 이면 prefers-color-scheme 를 해석해 stamp 하고
+   시스템 테마 변경을 실시간 추종한다. */
+.we-editor[data-theme="dark"],
+html[data-we-theme="dark"] .we-dialog-overlay,
+html[data-we-theme="dark"] .we-table-toolbar,
+html[data-we-theme="dark"] .we-color-popover,
+html[data-we-theme="dark"] .we-emoji-popover {
+  --we-bg: #16181d;
+  --we-fg: #e8eaed;
+  --we-muted: #9aa2ad;
+  --we-border: #2b2f36;
+  --we-border-strong: #3a3f47;
+  --we-surface: #1e2127;
+  --we-surface-hover: #272b32;
+  --we-accent: #60a5fa;
+  --we-accent-soft: #1e3a5f;
+  --we-shadow: 0 4px 28px rgba(0, 0, 0, 0.5);
 }
 
 /* ---------- 툴바 ---------- */
