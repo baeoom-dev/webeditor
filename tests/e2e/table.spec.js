@@ -37,6 +37,37 @@ test('표 삽입 다이얼로그의 캡션 입력이 <caption> 으로 들어간�
   expect(firstChild).toBe('CAPTION');
 });
 
+test('캡션은 편집 모드에선 보이고 출력(.we-content)에선 sr-only 로 감춰진다', async ({ page }) => {
+  await caretAtEnd(page);
+  await page.getByRole('button', { name: '표' }).click();
+  await page.getByLabel(/캡션/).fill('표 제목');
+  await page.getByRole('button', { name: '삽입' }).click();
+
+  // 편집 영역: 캡션이 화면에 보인다.
+  const editorCaptionHeight = await page.evaluate(() =>
+    Math.round(document.querySelector('.we-editor-content caption').getBoundingClientRect().height),
+  );
+  expect(editorCaptionHeight).toBeGreaterThan(1);
+
+  // 출력(.we-content): DOM 에는 있지만 시각적으로 숨김. display:none/visibility:hidden 은 아니어야
+  // 스크린리더 접근성 트리에 남는다(clip 기법).
+  await page.getByRole('button', { name: '출력 미리보기(.we-content)' }).click();
+  const out = await page.evaluate(() => {
+    const c = document.querySelector('#preview.we-content caption');
+    const cs = getComputedStyle(c);
+    return {
+      text: c.textContent,
+      height: Math.round(c.getBoundingClientRect().height),
+      display: cs.display,
+      visibility: cs.visibility,
+    };
+  });
+  expect(out.text).toBe('표 제목'); // 스크린리더가 읽을 텍스트는 유지
+  expect(out.height).toBeLessThanOrEqual(1); // 화면에서는 숨김
+  expect(out.display).not.toBe('none');
+  expect(out.visibility).not.toBe('hidden');
+});
+
 test('캡션을 비우면 <caption> 이 생기지 않는다', async ({ page }) => {
   await caretAtEnd(page);
   await page.getByRole('button', { name: '표' }).click();

@@ -226,13 +226,42 @@ html[data-we-theme="dark"] .we-content,
   margin: 0.6em 0;
 }
 
+/* 캡션 — 출력 페이지에서는 화면에서 감추되 스크린리더로는 읽히게 한다(sr-only).
+   display:none/visibility:hidden 은 접근성 트리에서 제거되므로 clip 기법을 쓴다. */
 .we-content caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 편집 모드에서는 작성자가 캡션을 보고 수정할 수 있도록 다시 표시한다
+   (편집 영역 div 는 we-editor-content 와 we-content 를 함께 가지므로, 위 sr-only 를
+   이 규칙이 뒤에서 덮어쓴다 — 동일 특정성, 소스 순서로 승리). */
+.we-editor-content caption {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
   caption-side: top;
   padding: 4px 2px 8px;
   text-align: left;
   font-size: 0.9em;
   font-weight: 600;
   color: var(--we-muted);
+}
+.we-editor-content caption::after {
+  content: " (스크린리더 전용)";
+  font-weight: 400;
+  opacity: 0.65;
 }
 
 .we-content th,
