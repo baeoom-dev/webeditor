@@ -51,4 +51,5 @@ export const icons = {
   mergeCells: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="20"/><polyline points="8 10 10 12 8 14"/><polyline points="16 10 14 12 16 14"/>'),
   splitCell: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="20"/><polyline points="7 9 5 12 7 15"/><polyline points="17 9 19 12 17 15"/>'),
   trash: svg('<path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>'),
+  caption: svg('<line x1="3" y1="5" x2="13" y2="5"/><rect x="3" y="9" width="18" height="11" rx="1"/><line x1="9" y1="9" x2="9" y2="20"/>'),
 };

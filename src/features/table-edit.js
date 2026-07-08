@@ -11,6 +11,7 @@
  */
 import { icons } from '../ui/icons.js';
 import { ColorPicker } from '../ui/ColorPicker.js';
+import { Dialog } from '../ui/Dialog.js';
 import {
   cellsInRect,
   closestCell,
@@ -21,6 +22,7 @@ import {
   mergeCells,
   splitCell,
   deleteTable,
+  setCaption,
   styleCells,
 } from './table-ops.js';
 
@@ -204,7 +206,10 @@ export class TableToolbar {
         ['alignCenter', '가운데 정렬', () => this._align('center')],
         ['alignRight', '오른쪽 정렬', () => this._align('right')],
       ],
-      [['trash', '표 삭제', () => this._deleteTable()]],
+      [
+        ['caption', '표 제목(캡션)', () => this._editCaption()],
+        ['trash', '표 삭제', () => this._deleteTable()],
+      ],
     ];
 
     this._buttons = [];
@@ -302,6 +307,61 @@ export class TableToolbar {
     deleteTable(this._activeTable);
     this.onChange();
     this.hide();
+  }
+
+  /** 표 제목(캡션) 추가/수정/삭제 다이얼로그. 캡션 없는 표에도 넣을 수 있다. */
+  _editCaption() {
+    const table = this._activeTable;
+    const cell = this._activeCell;
+    if (!table) return;
+    const existing = table.querySelector(':scope > caption');
+    const current = existing ? existing.textContent : '';
+
+    const dialog = new Dialog({
+      title: '표 제목(캡션)',
+      render: (body, close) => {
+        const form = document.createElement('form');
+        form.className = 'we-form';
+
+        const wrap = document.createElement('div');
+        wrap.className = 'we-field';
+        const id = `we-tcap-${Math.random().toString(36).slice(2, 8)}`;
+        const label = document.createElement('label');
+        label.htmlFor = id;
+        label.textContent = '캡션 (비우면 삭제)';
+        const input = document.createElement('input');
+        input.id = id;
+        input.type = 'text';
+        input.value = current;
+        input.placeholder = '예: 분기별 매출';
+        wrap.append(label, input);
+
+        const actions = document.createElement('div');
+        actions.className = 'we-form-actions';
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'we-btn we-btn-secondary';
+        cancel.textContent = '취소';
+        cancel.addEventListener('click', () => close());
+        const submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.className = 'we-btn we-btn-primary';
+        submit.innerHTML = `${icons.check}<span>적용</span>`;
+        actions.append(cancel, submit);
+
+        form.append(wrap, actions);
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          setCaption(table, input.value);
+          this.onChange();
+          // 커서를 표 셀로 되돌려 툴바가 유지되게 한다(다이얼로그가 편집기로 포커스 복원).
+          if (cell && this.root.contains(cell)) placeCaret(cell);
+          close();
+        });
+        body.appendChild(form);
+      },
+    });
+    dialog.open();
   }
 
   /** 동작 후: 변경 반영 + 커서 복원 + 위치 재계산. */

@@ -343,6 +343,26 @@ export function deleteTable(table) {
   table.remove();
 }
 
+/**
+ * 표 캡션을 설정/수정/삭제한다. text 가 비어 있으면 캡션을 제거한다.
+ * caption 은 table 의 첫 자식이어야 한다(HTML 명세). 텍스트로만 넣어 안전하게 처리.
+ * @returns {HTMLElement|null} 설정된 caption(제거 시 null)
+ */
+export function setCaption(table, text) {
+  const trimmed = (text || '').trim();
+  let cap = table.querySelector(':scope > caption');
+  if (!trimmed) {
+    if (cap) cap.remove();
+    return null;
+  }
+  if (!cap) {
+    cap = document.createElement('caption');
+    table.insertBefore(cap, table.firstChild);
+  }
+  cap.textContent = trimmed;
+  return cap;
+}
+
 /** 셀 목록에 인라인 스타일을 적용한다(새니타이저 화이트리스트 내 속성만). */
 export function styleCells(cells, prop, value) {
   for (const cell of cells) {

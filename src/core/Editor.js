@@ -12,7 +12,7 @@ import { ColorPicker } from '../ui/ColorPicker.js';
 import { EmojiPicker } from '../ui/EmojiPicker.js';
 import { Dialog } from '../ui/Dialog.js';
 import { openLinkDialog } from '../features/link.js';
-import { openImageDialog, insertImageFile } from '../features/image.js';
+import { openImageDialog, openImageAltDialog, insertImageFile } from '../features/image.js';
 import { openTableDialog } from '../features/table.js';
 import { TableToolbar } from '../features/table-edit.js';
 import { toggleInlineCode, insertCodeBlock, handleCodeBlockEnter } from '../features/code.js';
@@ -428,6 +428,15 @@ export class Editor {
     // 코드 블록 안의 Enter 는 <code> 를 쪼개지 않고 줄바꿈으로 처리.
     this.content.addEventListener('keydown', (e) => {
       if (handleCodeBlockEnter(e, this.content)) this._emitChange();
+    });
+
+    // 이미지 더블클릭 → 대체 텍스트(alt) 편집.
+    this.content.addEventListener('dblclick', (e) => {
+      const img = e.target.closest('img');
+      if (img && this.content.contains(img)) {
+        e.preventDefault();
+        openImageAltDialog(img, this._ctx());
+      }
     });
 
     this.content.addEventListener('paste', (e) => {

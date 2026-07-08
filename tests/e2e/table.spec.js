@@ -68,6 +68,51 @@ test('캡션은 편집 모드에선 보이고 출력(.we-content)에선 sr-only 
   expect(out.visibility).not.toBe('hidden');
 });
 
+test('표 컨텍스트 툴바로 캡션 없는 표에 캡션을 추가한다', async ({ page }) => {
+  await page.evaluate(() => {
+    const ed = window.__editor;
+    ed.setHTML('<table><tbody><tr><th scope="col">항목</th></tr><tr><td>매출</td></tr></tbody></table>');
+    const cell = ed.content.querySelector('td');
+    const r = document.createRange();
+    r.selectNodeContents(cell);
+    r.collapse(true);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+    ed.content.focus();
+  });
+  await page.locator('.we-table-toolbar').waitFor({ state: 'visible' });
+  await page.locator('.we-table-toolbar [aria-label="표 제목(캡션)"]').click();
+  await page.locator('.we-dialog input[type=text]').fill('실적표');
+  await page.locator('.we-dialog button[type=submit]').click();
+
+  const html = await page.evaluate(() => window.__editor.getHTML());
+  expect(html).toContain('<caption>실적표</caption>');
+});
+
+test('툴바 캡션 다이얼로그를 비우면 기존 캡션이 제거된다', async ({ page }) => {
+  await page.evaluate(() => {
+    const ed = window.__editor;
+    ed.setHTML('<table><caption>지울제목</caption><tbody><tr><td>a</td></tr></tbody></table>');
+    const cell = ed.content.querySelector('td');
+    const r = document.createRange();
+    r.selectNodeContents(cell);
+    r.collapse(true);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+    ed.content.focus();
+  });
+  await page.locator('.we-table-toolbar').waitFor({ state: 'visible' });
+  await page.locator('.we-table-toolbar [aria-label="표 제목(캡션)"]').click();
+  await expect(page.locator('.we-dialog input[type=text]')).toHaveValue('지울제목');
+  await page.locator('.we-dialog input[type=text]').fill('');
+  await page.locator('.we-dialog button[type=submit]').click();
+
+  const html = await page.evaluate(() => window.__editor.getHTML());
+  expect(html).not.toContain('<caption>');
+});
+
 test('캡션을 비우면 <caption> 이 생기지 않는다', async ({ page }) => {
   await caretAtEnd(page);
   await page.getByRole('button', { name: '표' }).click();

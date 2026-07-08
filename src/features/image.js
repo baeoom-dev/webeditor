@@ -195,6 +195,57 @@ export function openImageDialog(ctx) {
   dialog.open();
 }
 
+/**
+ * 삽입된 이미지의 대체 텍스트(alt)를 편집하는 다이얼로그.
+ * @param {HTMLImageElement} img 대상 이미지
+ * @param {object} ctx onChange 등을 포함한 컨텍스트
+ */
+export function openImageAltDialog(img, ctx) {
+  const dialog = new Dialog({
+    title: '이미지 대체 텍스트',
+    render: (body, close) => {
+      const form = document.createElement('form');
+      form.className = 'we-form';
+
+      const wrap = document.createElement('div');
+      wrap.className = 'we-field';
+      const id = `we-editalt-${Math.random().toString(36).slice(2, 8)}`;
+      const label = document.createElement('label');
+      label.htmlFor = id;
+      label.textContent = '대체 텍스트(alt) — 웹접근성 권장';
+      const input = document.createElement('input');
+      input.id = id;
+      input.type = 'text';
+      input.value = img.getAttribute('alt') || '';
+      input.placeholder = '이미지 설명';
+      wrap.append(label, input);
+
+      const actions = document.createElement('div');
+      actions.className = 'we-form-actions';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'we-btn we-btn-secondary';
+      cancel.textContent = '취소';
+      cancel.addEventListener('click', () => close());
+      const submit = document.createElement('button');
+      submit.type = 'submit';
+      submit.className = 'we-btn we-btn-primary';
+      submit.innerHTML = `${icons.check}<span>적용</span>`;
+      actions.append(cancel, submit);
+
+      form.append(wrap, actions);
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        img.setAttribute('alt', input.value.trim());
+        ctx.onChange();
+        close();
+      });
+      body.appendChild(form);
+    },
+  });
+  dialog.open();
+}
+
 function showError(el, msg) {
   el.textContent = msg;
   el.hidden = false;
