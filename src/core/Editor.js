@@ -192,16 +192,17 @@ export class Editor {
     this._updateThemeButton(effective);
   }
 
-  /** 테마 토글 버튼의 아이콘·라벨·상태를 갱신한다. */
+  /** 테마 토글 버튼을 갱신한다. 아이콘은 '현재' 모드를 표시한다(해=라이트, 달=다크). */
   _updateThemeButton(effective) {
     const btn = this.toolbar.getButton('theme');
     if (!btn) return;
-    const toDark = effective !== 'dark';
-    btn.innerHTML = toDark ? icons.moon : icons.sun;
-    const label = toDark ? '다크 모드로 전환' : '라이트 모드로 전환';
+    const isDark = effective === 'dark';
+    btn.innerHTML = isDark ? icons.moon : icons.sun;
+    // 아이콘은 현재 모드, 라벨은 클릭 시 동작을 함께 안내(접근성).
+    const label = isDark ? '다크 모드 (클릭 시 라이트로 전환)' : '라이트 모드 (클릭 시 다크로 전환)';
     btn.setAttribute('aria-label', label);
     btn.setAttribute('title', label);
-    btn.setAttribute('aria-pressed', effective === 'dark' ? 'true' : 'false');
+    btn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
   }
 
   /** 소스 textarea 내용을 새니타이즈해 본문에 반영한다. */
