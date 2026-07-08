@@ -10,10 +10,18 @@ import { icons } from '../ui/icons.js';
 const MAX_ROWS = 20;
 const MAX_COLS = 10;
 
-/** rows x cols 표 요소를 만든다. 첫 행은 th(헤더). */
-function buildTable(rows, cols, withHeader) {
+/** rows x cols 표 요소를 만든다. 첫 행은 th(헤더). caption 이 있으면 표 제목으로 넣는다. */
+function buildTable(rows, cols, withHeader, caption) {
   const table = document.createElement('table');
   table.className = 'we-table';
+
+  // caption 은 table 의 첫 자식이어야 한다(HTML 명세). 텍스트로만 넣어 안전하게 처리.
+  const captionText = (caption || '').trim();
+  if (captionText) {
+    const cap = document.createElement('caption');
+    cap.textContent = captionText;
+    table.appendChild(cap);
+  }
 
   const tbody = document.createElement('tbody');
   for (let r = 0; r < rows; r += 1) {
@@ -59,6 +67,8 @@ export function openTableDialog(ctx) {
         updatePreview();
       });
 
+      const captionField = textField('캡션(표 제목, 선택)', '예: 분기별 매출');
+
       const headerLabel = document.createElement('label');
       headerLabel.className = 'we-checkbox';
       const headerCb = document.createElement('input');
@@ -84,12 +94,12 @@ export function openTableDialog(ctx) {
       }
       updatePreview();
 
-      form.append(rowsField.wrap, colsField.wrap, headerLabel, preview, actions);
+      form.append(rowsField.wrap, colsField.wrap, captionField.wrap, headerLabel, preview, actions);
 
       form.addEventListener('submit', (e) => {
         e.preventDefault();
         ctx.selection.restore();
-        const table = buildTable(state.rows, state.cols, headerCb.checked);
+        const table = buildTable(state.rows, state.cols, headerCb.checked, captionField.input.value);
         ctx.selection.insertNode(table);
         // 표 뒤에 빈 문단을 두어 커서가 표 밖으로 나올 수 있게 한다.
         const p = document.createElement('p');
@@ -103,6 +113,21 @@ export function openTableDialog(ctx) {
     },
   });
   dialog.open();
+}
+
+function textField(labelText, placeholder) {
+  const wrap = document.createElement('div');
+  wrap.className = 'we-field';
+  const id = `we-cap-${Math.random().toString(36).slice(2, 8)}`;
+  const label = document.createElement('label');
+  label.htmlFor = id;
+  label.textContent = labelText;
+  const input = document.createElement('input');
+  input.id = id;
+  input.type = 'text';
+  if (placeholder) input.placeholder = placeholder;
+  wrap.append(label, input);
+  return { wrap, input };
 }
 
 function numberField(labelText, value, max, onChange) {

@@ -226,6 +226,15 @@ html[data-we-theme="dark"] .we-content,
   margin: 0.6em 0;
 }
 
+.we-content caption {
+  caption-side: top;
+  padding: 4px 2px 8px;
+  text-align: left;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--we-muted);
+}
+
 .we-content th,
 .we-content td {
   border: 1px solid var(--we-border-strong);
