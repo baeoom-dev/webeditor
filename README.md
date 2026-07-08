@@ -60,9 +60,9 @@ pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
 
 | 산출물 | 용도 | 크기 |
 |---|---|---|
-| `dist/webeditor.esm.js` | `import` (소비자 번들러가 최적화) | ~62 KB |
-| `dist/webeditor.iife.min.js` | `<script>` 태그, 전역 `WebEditor` | ~39 KB |
-| `dist/webeditor.css` | 스타일시트 | ~8 KB |
+| `dist/webeditor.esm.js` | `import` (소비자 번들러가 최적화) | ~90 KB |
+| `dist/webeditor.iife.min.js` | `<script>` 태그, 전역 `WebEditor` (압축) | ~57 KB |
+| `dist/webeditor.css` | 스타일시트 (압축) | ~10 KB |
 | `dist/webeditor.d.ts` | TypeScript 타입 | — |
 
 ## 기능
@@ -191,6 +191,16 @@ editor.destroy();          // DOM 제거 + 리스너 해제
 > 구조 편집은 DOM 을 직접 변형하므로 브라우저 네이티브 `Ctrl+Z`(execCommand undo)에는
 > 기록되지 않는다(표 삽입과 동일). 표 삽입 자체와 마찬가지 제약이다.
 
+## 코드 블록 / 인라인 코드
+
+- **인라인 코드**(`{ }` 버튼): 선택 영역을 `<code>` 로 감싼다. 이미 인라인 코드면 해제(토글).
+- **코드 블록**(`[<>]` 버튼): 선택 텍스트를 `<pre><code>` 로 만든다. 선택이 없으면 빈 코드 블록을
+  삽입하고 커서를 그 안에 둔다. 코드 블록 안에서 다시 누르면 일반 문단으로 되돌린다(토글).
+- 코드 블록 안에서 **Enter 는 줄바꿈**(`<br>`)으로 처리되어 여러 줄 코드를 자연스럽게 입력할 수 있다
+  (기본 contenteditable 이 `<code>` 를 쪼개는 동작을 가로챈다).
+- 출력 페이지 스타일은 [출력 페이지에 렌더링](#출력-페이지에-렌더링-중요) 참고. 문법 하이라이팅은
+  에디터가 아니라 출력 시 highlight.js/Prism 등으로 처리한다.
+
 ## 소스 보기
 
 툴바의 `<>` 버튼으로 HTML 소스를 직접 편집할 수 있다.
@@ -250,3 +260,13 @@ pnpm dev   # python3 -m http.server 8791
 # http://localhost:8791            — ESM(src 직접) 데모
 # http://localhost:8791/demo/legacy.html — IIFE 번들 데모 (pnpm build 선행)
 ```
+
+## 테스트 (개발자)
+
+```bash
+pnpm test:e2e   # Playwright E2E — 시스템 Chrome 사용, 데모 서버 자동 기동
+```
+
+- `tests/e2e/` 의 Playwright 스펙이 데모를 **실제 Chrome**(`channel: 'chrome'`, 브라우저 다운로드
+  없음)에서 구동해 코드 블록·인라인 코드·테마 등을 검증한다.
+- 실패/스크린샷 산출물은 `test-results/` 에 저장된다(gitignore).
