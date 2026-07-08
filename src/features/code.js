@@ -93,16 +93,38 @@ export function toggleInlineCode(root) {
     unwrap(existing);
     return;
   }
-  if (range.collapsed) return; // 선택이 없으면 무시
+
+  // 선택이 없으면 커서가 놓인 단어를 자동 선택해 감싼다(선택 없이 클릭해도 동작하도록).
+  let wrapRange = range;
+  if (range.collapsed) {
+    const word = wordRangeAt(range.startContainer, range.startOffset);
+    if (!word) return; // 감쌀 단어가 없으면(공백/빈 곳) 무시
+    wrapRange = word;
+  }
 
   try {
     const code = document.createElement('code');
-    code.appendChild(range.extractContents());
-    range.insertNode(code);
+    code.appendChild(wrapRange.extractContents());
+    wrapRange.insertNode(code);
     selectContents(code);
   } catch {
     /* 블록 경계를 넘는 복잡한 선택은 무시 */
   }
+}
+
+/** 텍스트 노드의 offset 위치가 속한 단어 범위를 반환한다(공백/경계 밖이면 null). */
+function wordRangeAt(node, offset) {
+  if (!node || node.nodeType !== Node.TEXT_NODE) return null;
+  const text = node.data;
+  let start = offset;
+  let end = offset;
+  while (start > 0 && !/\s/.test(text[start - 1])) start -= 1;
+  while (end < text.length && !/\s/.test(text[end])) end += 1;
+  if (end <= start) return null; // 커서가 공백 위 등 단어가 없는 위치
+  const range = document.createRange();
+  range.setStart(node, start);
+  range.setEnd(node, end);
+  return range;
 }
 
 /**

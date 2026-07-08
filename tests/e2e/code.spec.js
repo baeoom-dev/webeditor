@@ -40,6 +40,26 @@ test('인라인 코드 버튼이 선택 영역을 <code> 로 감싼다', async (
   expect(html).toContain('<code>hello</code>');
 });
 
+test('선택 없이 커서만 있을 때 인라인 코드 버튼이 현재 단어를 감싼다', async ({ page }) => {
+  await page.evaluate(() => {
+    const ed = window.__editor;
+    ed.setHTML('<p>hello world</p>');
+    const t = ed.content.querySelector('p').firstChild;
+    const r = document.createRange();
+    r.setStart(t, 8); // "wor|ld" — world 안 커서(선택 없음)
+    r.collapse(true);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+    ed.content.focus();
+    ed.selection.save();
+  });
+  await page.getByRole('button', { name: '인라인 코드' }).click();
+
+  const html = await page.evaluate(() => window.__editor.getHTML());
+  expect(html).toContain('<code>world</code>');
+});
+
 test('코드 블록 버튼이 선택 텍스트를 <pre><code> 로 만든다', async ({ page }) => {
   await page.evaluate(() => window.__editor.setHTML('<p>const x = 1;</p>'));
   await selectInFirstParagraph(page, 0, 12);
