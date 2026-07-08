@@ -32,6 +32,8 @@ export const icons = {
   table: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/>'),
   emoji: svg('<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>'),
   code: svg('<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'),
+  codeInline: svg('<path d="M8 4c-2 0-3 1-3 3v2c0 1-.6 2-2 2 1.4 0 2 1 2 2v2c0 2 1 3 3 3"/><path d="M16 4c2 0 3 1 3 3v2c0 1 .6 2 2 2-1.4 0-2 1-2 2v2c0 2-1 3-3 3"/>'),
+  codeBlock: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><polyline points="9 10 7 12 9 14"/><polyline points="13 10 15 12 13 14"/>'),
   clear: svg('<path d="M4 7h16"/><path d="M10 7l-.5 12"/><path d="M14 7l.5 12"/><path d="M7 4h10l-1 3H8z"/>'),
   undo: svg('<path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 1 3 7"/>'),
   redo: svg('<path d="M21 7v6h-6"/><path d="M21 13a9 9 0 1 0-3 7"/>'),

@@ -4,12 +4,14 @@
  * 접근성: 포커스 링, 충분한 대비, 축소 모션 대응.
  */
 /* 디자인 토큰. 다이얼로그·표 툴바·팝오버는 body 직속으로 렌더되므로 .we-editor
-   바깥에서도 토큰을 상속받도록 함께 스코프에 포함한다. */
+   바깥에서도 토큰을 상속받도록 함께 스코프에 포함한다.
+   .we-content 는 출력 페이지에서 단독으로 쓰이므로 자체 토큰이 필요하다. */
 .we-editor,
 .we-dialog-overlay,
 .we-table-toolbar,
 .we-color-popover,
-.we-emoji-popover {
+.we-emoji-popover,
+.we-content {
   --we-bg: #ffffff;
   --we-fg: #1a1a1a;
   --we-muted: #6b7280;
@@ -46,10 +48,13 @@
    config.theme === 'auto' 이면 prefers-color-scheme 를 해석해 stamp 하고
    시스템 테마 변경을 실시간 추종한다. */
 .we-editor[data-theme="dark"],
+.we-editor[data-theme="dark"] .we-content,
 html[data-we-theme="dark"] .we-dialog-overlay,
 html[data-we-theme="dark"] .we-table-toolbar,
 html[data-we-theme="dark"] .we-color-popover,
-html[data-we-theme="dark"] .we-emoji-popover {
+html[data-we-theme="dark"] .we-emoji-popover,
+html[data-we-theme="dark"] .we-content,
+.we-content[data-theme="dark"] {
   --we-bg: #16181d;
   --we-fg: #e8eaed;
   --we-muted: #9aa2ad;
@@ -131,13 +136,12 @@ html[data-we-theme="dark"] .we-emoji-popover {
   box-shadow: var(--we-focus);
 }
 
-/* ---------- 편집 영역 ---------- */
+/* ---------- 편집 영역(에디터 크롬) ---------- */
 .we-editor-content {
   padding: 16px 18px;
   outline: none;
   overflow-wrap: break-word;
   word-break: break-word;
-  line-height: 1.7;
   font-size: 15px;
   overflow-y: auto;
   max-height: 70vh;
@@ -157,38 +161,79 @@ html[data-we-theme="dark"] .we-emoji-popover {
 .we-editor-content > *:first-child { margin-top: 0; }
 .we-editor-content > *:last-child { margin-bottom: 0; }
 
-.we-editor-content a {
+/* ---------- 콘텐츠 스타일(에디터·출력 공용) ----------
+   .we-content 는 편집 영역(we-editor-content 와 함께 부여)과 출력 페이지 양쪽에서
+   같은 클래스로 재사용된다. 출력 시:  <div class="we-content">{{ getHTML() }}</div> */
+.we-content {
+  color: var(--we-fg);
+  font-family: var(--we-font);
+  line-height: 1.7;
+}
+
+.we-content a {
   color: var(--we-accent);
   text-decoration: underline;
 }
 
-.we-editor-content img {
+.we-content img {
   max-width: 100%;
   height: auto;
   border-radius: var(--we-radius-sm);
 }
 
-.we-editor-content blockquote {
+.we-content blockquote {
   margin: 0.8em 0;
   padding-left: 14px;
   border-left: 3px solid var(--we-border-strong);
   color: var(--we-muted);
 }
 
+/* 인라인 코드 */
+.we-content :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  background: var(--we-surface);
+  border: 1px solid var(--we-border);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+}
+
+/* 코드 블록 */
+.we-content pre {
+  margin: 0.8em 0;
+  padding: 14px 16px;
+  border-radius: var(--we-radius-sm);
+  background: var(--we-surface);
+  border: 1px solid var(--we-border);
+  overflow-x: auto;
+  line-height: 1.55;
+}
+
+.we-content pre code {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  white-space: pre;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.875em;
+  color: var(--we-fg);
+}
+
 /* 표: 붙여넣은 인라인 스타일이 우선하도록 낮은 특정성으로 기본값만 제공 */
-.we-editor-content table {
+.we-content table {
   border-collapse: collapse;
   margin: 0.6em 0;
 }
 
-.we-editor-content th,
-.we-editor-content td {
+.we-content th,
+.we-content td {
   border: 1px solid var(--we-border-strong);
   padding: 6px 10px;
   min-width: 40px;
 }
 
-.we-editor-content th {
+.we-content th {
   background: var(--we-surface);
   font-weight: 600;
 }

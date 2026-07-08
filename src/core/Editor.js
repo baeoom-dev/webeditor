@@ -15,13 +15,14 @@ import { openLinkDialog } from '../features/link.js';
 import { openImageDialog, insertImageFile } from '../features/image.js';
 import { openTableDialog } from '../features/table.js';
 import { TableToolbar } from '../features/table-edit.js';
+import { toggleInlineCode, insertCodeBlock } from '../features/code.js';
 import { handlePaste } from '../clipboard/paste.js';
 import { sanitizeHtml } from '../security/sanitizer.js';
 
 const DEFAULT_FONT_SIZES = ['12px', '14px', '16px', '18px', '24px', '32px'];
 const DEFAULT_FEATURES = [
-  'bold', 'italic', 'underline', 'strikethrough', 'fontSize', 'color', 'backColor',
-  'ul', 'ol', 'align', 'outdent', 'indent', 'link', 'image', 'table', 'emoji',
+  'bold', 'italic', 'underline', 'strikethrough', 'code', 'fontSize', 'color', 'backColor',
+  'ul', 'ol', 'align', 'outdent', 'indent', 'link', 'image', 'table', 'codeBlock', 'emoji',
   'removeFormat', 'sourceView', 'theme', 'undo', 'redo',
 ];
 
@@ -67,7 +68,8 @@ export class Editor {
     this.container.className = 'we-editor';
 
     this.content = document.createElement('div');
-    this.content.className = 'we-editor-content';
+    // we-content: 콘텐츠 렌더링 스타일 클래스(출력 페이지에서도 동일 클래스로 재사용).
+    this.content.className = 'we-editor-content we-content';
     this.content.setAttribute('contenteditable', 'true');
     this.content.setAttribute('role', 'textbox');
     this.content.setAttribute('aria-multiline', 'true');
@@ -280,6 +282,7 @@ export class Editor {
     if (has('italic')) inline.push(this._item('italic', icons.italic, '기울임 (Ctrl+I)', () => this._run(commands.italic), 'italic'));
     if (has('underline')) inline.push(this._item('underline', icons.underline, '밑줄 (Ctrl+U)', () => this._run(commands.underline), 'underline'));
     if (has('strikethrough')) inline.push(this._item('strikethrough', icons.strike, '취소선', () => this._run(commands.strikethrough), 'strikeThrough'));
+    if (has('code')) inline.push(this._item('code', icons.codeInline, '인라인 코드', () => this._run(() => toggleInlineCode(this.content))));
     if (inline.length) groups.push(inline);
 
     const fontGroup = [];
@@ -307,6 +310,7 @@ export class Editor {
     if (has('link')) insertGroup.push(this._item('link', icons.link, '링크', () => openLinkDialog(this._ctx())));
     if (has('image')) insertGroup.push(this._item('image', icons.image, '이미지', () => openImageDialog(this._ctx())));
     if (has('table')) insertGroup.push(this._item('table', icons.table, '표', () => openTableDialog(this._ctx())));
+    if (has('codeBlock')) insertGroup.push(this._item('codeBlock', icons.codeBlock, '코드 블록', () => this._run(() => insertCodeBlock(this.content))));
     if (has('emoji')) insertGroup.push(this._emojiItem());
     if (insertGroup.length) groups.push(insertGroup);
 

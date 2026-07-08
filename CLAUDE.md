@@ -87,6 +87,23 @@ schema 화이트리스트로 남긴다. `align`/`bgcolor` 같은 레거시 속�
   이미 schema 화이트리스트에 있으므로 getHTML() 새니타이즈를 통과한다. 새 서식 속성을
   추가하려면 먼저 `schema.js` 의 `ALLOWED_STYLES` 에 등록해야 유지된다.
 
+### 콘텐츠 스타일 공유(`.we-content`)
+
+- `getHTML()` 은 래퍼 없는 순수 HTML 을 반환한다. 콘텐츠 렌더링 스타일(pre/code/blockquote/
+  table/링크/이미지)은 `editor.css` 에서 **`.we-content`** 에 스코프돼 있고, 편집 영역 div 는
+  `we-editor-content we-content` 두 클래스를 함께 갖는다 — 그래서 에디터 내부와 출력 페이지가
+  **같은 스타일시트를 공유**한다(출력: `<div class="we-content">{{getHTML()}}</div>`).
+- 규칙: **콘텐츠(출력물) 외형** 규칙은 `.we-content` 에, **에디터 크롬**(패딩·포커스·플레이스홀더·
+  셀 선택 하이라이트 등)은 `.we-editor-content` 에 둔다. 새 블록 요소 스타일을 추가할 땐 `.we-content` 에.
+- `.we-content` 는 출력 페이지에서 단독으로 쓰이므로 토큰 스코프와 다크 셀렉터 목록에 포함돼 있다.
+
+### 코드 서식(features/code.js)
+
+- 인라인 코드(`<code>`)·코드 블록(`<pre><code>`)은 execCommand 로 안 되어 Range 를 직접 조작한다.
+  두 태그는 이미 `schema.js` 화이트리스트에 있어 sanitize 를 통과한다. 스타일은 `.we-content` 담당.
+- 언어 클래스/문법 하이라이팅을 저장하려면 `schema.js` 의 `ALLOWED_ATTRS` 에서 `class`/`data-*` 를
+  명시 허용해야 한다(기본 미허용 — XSS 방지).
+
 ### 테마(라이트/다크)
 
 - 색상은 전부 CSS 토큰(`--we-*`)이다. 다크 팔레트는 `editor.css` 의 단일 블록에 있고,

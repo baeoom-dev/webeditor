@@ -69,11 +69,11 @@ pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
 
 | 그룹 | 기능 |
 |---|---|
-| 인라인 서식 | 굵게, 기울임, 밑줄, 취소선 |
+| 인라인 서식 | 굵게, 기울임, 밑줄, 취소선, 인라인 코드 |
 | 글자 | 글자 크기, 글자 색, 배경 색 |
 | 목록 | 글머리 기호(UL), 번호(OL), 들여쓰기, 내어쓰기 |
 | 정렬 | 왼쪽 / 가운데 / 오른쪽 / 양쪽 |
-| 삽입 | 링크, 이미지, 표, 이모지 |
+| 삽입 | 링크, 이미지, 표, 코드 블록, 이모지 |
 | 표 편집 | 행/열 추가·삭제, 셀 병합/분할, 셀 배경·글자색·정렬 |
 | 보기 | 다크 모드 토글, HTML 소스 보기 |
 | 유틸 | 서식 지우기, 실행 취소/다시 실행 |
@@ -115,6 +115,28 @@ editor.toggleSource();     // HTML 소스보기 토글
 editor.focus();
 editor.destroy();          // DOM 제거 + 리스너 해제
 ```
+
+## 출력 페이지에 렌더링 (중요)
+
+`getHTML()` 은 래퍼 없는 **순수 시맨틱 HTML**(`<pre><code>`, `<blockquote>`, `<table>` 등)을 반환한다.
+에디터의 콘텐츠 스타일(코드 블록·인용구·표·인라인 코드 배경 등)은 **`.we-content` 클래스에 스코프**돼
+있으므로, 저장한 HTML 을 실제 페이지에 렌더할 때 **같은 클래스로 감싸고 `webeditor.css` 를 포함**하면
+에디터와 동일한 외형이 나온다 — 별도 스타일을 새로 작성할 필요가 없다.
+
+```html
+<link rel="stylesheet" href="/webeditor.css" />        <!-- 또는 @baeoom/webeditor/css -->
+
+<article class="we-content">
+  <!-- 서버에 저장해 둔 editor.getHTML() 결과 -->
+</article>
+```
+
+- 다크로 렌더하려면 컨테이너에 `data-theme="dark"` 를 주거나 `<html data-we-theme="dark">` 로 지정한다.
+- 색상은 CSS 토큰(`--we-*`)이므로 토큰만 재정의해 브랜드 팔레트로 바꿀 수 있다.
+- **문법 하이라이팅**은 별개 관심사다. 에디터는 순수 `<pre><code>` 만 저장하고, 출력 시 highlight.js/Prism
+  으로 색칠하면 된다. 언어 클래스(`class="language-js"`)를 HTML 에 저장하려면 `schema.js` 의
+  `ALLOWED_ATTRS` 에서 `code`/`pre` 의 `class`(또는 `data-language`)를 명시적으로 허용해야 한다
+  (기본은 XSS 방지를 위해 `class` 미허용).
 
 ## 보안
 
@@ -212,7 +234,7 @@ editor.getTheme();
 src/
 ├── core/          Editor, Selection, commands
 ├── ui/            Toolbar, Dialog, ColorPicker, EmojiPicker, icons
-├── features/      link, image, table, table-edit(컨텍스트 툴바), table-ops(그리드 연산)
+├── features/      link, image, table, table-edit(컨텍스트 툴바), table-ops(그리드 연산), code
 ├── clipboard/     paste (엑셀 표 보존)
 ├── security/      sanitizer, schema
 └── styles/        editor.css

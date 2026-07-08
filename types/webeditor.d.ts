@@ -27,10 +27,10 @@ export interface EditorConfig {
   fontSizes?: string[];
   /**
    * 활성화할 기능 목록. 기본은 전체.
-   * 'bold' | 'italic' | 'underline' | 'strikethrough' | 'fontSize' | 'color'
-   * | 'backColor' | 'ul' | 'ol' | 'align' | 'outdent' | 'indent' | 'link'
-   * | 'image' | 'table' | 'emoji' | 'removeFormat' | 'sourceView' | 'theme'
-   * | 'undo' | 'redo'
+   * 'bold' | 'italic' | 'underline' | 'strikethrough' | 'code' | 'fontSize'
+   * | 'color' | 'backColor' | 'ul' | 'ol' | 'align' | 'outdent' | 'indent'
+   * | 'link' | 'image' | 'table' | 'codeBlock' | 'emoji' | 'removeFormat'
+   * | 'sourceView' | 'theme' | 'undo' | 'redo'
    */
   features?: string[];
   /** 내용 변경 콜백 */
