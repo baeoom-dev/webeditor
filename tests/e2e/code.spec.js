@@ -60,6 +60,16 @@ test('선택 없이 커서만 있을 때 인라인 코드 버튼이 현재 단�
   expect(html).toContain('<code>world</code>');
 });
 
+test('인라인 코드에 눈에 띄는 배경 스타일이 적용된다', async ({ page }) => {
+  await page.evaluate(() => window.__editor.setHTML('<p>이것은 <code>코드</code> 다.</p>'));
+  const bg = await page.evaluate(
+    () => getComputedStyle(document.querySelector('.we-editor-content :not(pre) > code')).backgroundColor,
+  );
+  // 투명이면 화면에서 안 보인다 — 배경이 반드시 칠해져야 한다.
+  expect(bg).not.toBe('rgba(0, 0, 0, 0)');
+  expect(bg).not.toBe('transparent');
+});
+
 test('코드 블록 버튼이 선택 텍스트를 <pre><code> 로 만든다', async ({ page }) => {
   await page.evaluate(() => window.__editor.setHTML('<p>const x = 1;</p>'));
   await selectInFirstParagraph(page, 0, 12);
