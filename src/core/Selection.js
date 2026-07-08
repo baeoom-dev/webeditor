@@ -26,13 +26,21 @@ export class SelectionManager {
     return this._saved;
   }
 
-  /** 저장한 선택을 복원하고 편집기에 포커스를 준다. */
+  /**
+   * 선택을 복원하고 편집기에 포커스를 준다.
+   *
+   * 편집기 안에 살아있는 현재 선택이 있으면 그것을 우선한다 — 저장본(_saved)은
+   * 다이얼로그 등에서 돌아올 때만 쓰는 폴백이다. 저장본을 무조건 덮어쓰면
+   * 과거 다이얼로그 시점의 스테일 위치가 사용자의 현재 선택을 지워버린다.
+   */
   restore() {
+    const live = this.getRange();
     this.root.focus();
-    if (!this._saved) return false;
+    const range = live || this._saved;
+    if (!range) return false;
     const sel = window.getSelection();
     sel.removeAllRanges();
-    sel.addRange(this._saved);
+    sel.addRange(range);
     return true;
   }
 
