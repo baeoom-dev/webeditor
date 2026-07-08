@@ -1,36 +1,69 @@
-# WebEditor
+# @baeoom/webeditor
 
 의존성 없는 **Vanilla JS WYSIWYG 웹 에디터**. 보안(XSS 방지)과 웹접근성을 최우선으로 설계했고,
 엑셀/스프레드시트 표를 붙여넣을 때 색·테두리·굵기 등 서식을 최대한 보존한다.
 
 ```
-빌드 불필요 · ES Modules · SVG 아이콘 · 화이트리스트 새니타이저 · WAI-ARIA
+런타임 의존성 0 · ESM + IIFE 듀얼 번들 · SVG 아이콘 · 화이트리스트 새니타이저 · WAI-ARIA
 ```
 
-## 빠른 시작
+## 설치
+
+```bash
+pnpm add @baeoom/webeditor   # 또는 npm i / yarn add
+```
+
+## 사용법
+
+### 모던 앱 (ESM — Next.js, Vite 등)
+
+```js
+import { createEditor } from '@baeoom/webeditor';
+import '@baeoom/webeditor/css';
+
+const editor = createEditor('#editor', {
+  placeholder: '내용을 입력하세요…',
+  uploadImage: async (file) => {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch('/api/upload', { method: 'POST', body: form });
+    const { url } = await res.json();
+    return url; // 삽입할 이미지 URL 을 반환
+  },
+});
+
+// 저장 시: 항상 새니타이즈된 안전한 HTML 을 반환
+const html = editor.getHTML();
+```
+
+### 레거시 페이지 (IIFE — `<script>` 태그, Classic ASP 등)
 
 ```html
-<link rel="stylesheet" href="./src/styles/editor.css" />
+<link rel="stylesheet" href="/lib/webeditor/webeditor.css" />
 <div id="editor"></div>
 
-<script type="module">
-  import { createEditor } from './src/index.js';
-
-  const editor = createEditor('#editor', {
-    placeholder: '내용을 입력하세요…',
-    uploadImage: async (file) => {
-      const form = new FormData();
-      form.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: form });
-      const { url } = await res.json();
-      return url; // 삽입할 이미지 URL 을 반환
-    },
-  });
-
-  // 저장 시: 항상 새니타이즈된 안전한 HTML 을 반환
-  const html = editor.getHTML();
+<script src="/lib/webeditor/webeditor.iife.min.js"></script>
+<script>
+  var editor = WebEditor.createEditor('#editor', { placeholder: '내용을 입력하세요…' });
 </script>
 ```
+
+npm 배포 시 CDN 으로도 사용 가능:
+`https://cdn.jsdelivr.net/npm/@baeoom/webeditor/dist/webeditor.iife.min.js`
+
+### 빌드 (개발자)
+
+```bash
+pnpm install
+pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
+```
+
+| 산출물 | 용도 | 크기 |
+|---|---|---|
+| `dist/webeditor.esm.js` | `import` (소비자 번들러가 최적화) | ~62 KB |
+| `dist/webeditor.iife.min.js` | `<script>` 태그, 전역 `WebEditor` | ~39 KB |
+| `dist/webeditor.css` | 스타일시트 | ~8 KB |
+| `dist/webeditor.d.ts` | TypeScript 타입 | — |
 
 ## 기능
 
@@ -140,6 +173,7 @@ src/
 ## 데모
 
 ```bash
-python3 -m http.server 8791
-# http://localhost:8791 접속
+pnpm dev   # python3 -m http.server 8791
+# http://localhost:8791            — ESM(src 직접) 데모
+# http://localhost:8791/demo/legacy.html — IIFE 번들 데모 (pnpm build 선행)
 ```

@@ -4,3 +4,6 @@ node_modules/
 
 # 로컬 도구 상태
 .bkit/
+
+# 빌드 산출물 (npm publish 시 prepublishOnly 로 생성)
+dist/

@@ -1,0 +1,52 @@
+{
+  "name": "@baeoom/webeditor",
+  "version": "0.1.0",
+  "description": "보안(XSS 방지)과 웹접근성을 최우선으로 한 Vanilla JS WYSIWYG 에디터. 엑셀 표 서식 보존 지원.",
+  "type": "module",
+  "main": "./dist/webeditor.esm.js",
+  "module": "./dist/webeditor.esm.js",
+  "types": "./dist/webeditor.d.ts",
+  "unpkg": "./dist/webeditor.iife.min.js",
+  "jsdelivr": "./dist/webeditor.iife.min.js",
+  "style": "./dist/webeditor.css",
+  "exports": {
+    ".": {
+      "types": "./dist/webeditor.d.ts",
+      "import": "./dist/webeditor.esm.js",
+      "default": "./dist/webeditor.esm.js"
+    },
+    "./css": "./dist/webeditor.css",
+    "./dist/*": "./dist/*"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "python3 -m http.server 8791",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "wysiwyg",
+    "editor",
+    "rich-text",
+    "vanilla-js",
+    "contenteditable",
+    "sanitizer",
+    "accessibility",
+    "excel-paste"
+  ],
+  "author": "baeoom",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
