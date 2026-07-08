@@ -7,3 +7,8 @@ node_modules/
 
 # 빌드 산출물 (npm publish 시 prepublishOnly 로 생성)
 dist/
+
+# Playwright E2E 산출물
+test-results/
+playwright-report/
+blob-report/

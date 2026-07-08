@@ -19,12 +19,15 @@ Classic ASP 등 레거시 페이지에 스크립트 태그로 직접 넣을 수 
 pnpm install
 pnpm build     # esbuild 로 dist/ 에 esm/iife/css/d.ts 생성 (scripts/build.mjs)
 pnpm dev       # python3 -m http.server 8791 — index.html 데모를 브라우저로 확인
+pnpm test:e2e  # Playwright E2E (시스템 Chrome, tests/e2e/) — 서버 자동 기동
 ```
 
-- **테스트 스위트 없음.** 검증은 `index.html`(ESM 데모)과 `demo/legacy.html`(IIFE 데모)을
-  `pnpm dev` 로 띄워 브라우저에서 수동 확인한다. 새 기능은 최소한 이 두 데모에서 동작을 확인할 것.
-- 배포 전 `prepublishOnly` 가 `build` 를 자동 실행한다. `dist/` 는 커밋되어 있으므로
-  소스 변경 후에는 `pnpm build` 로 갱신해야 한다.
+- **E2E**: `tests/e2e/` 의 Playwright 스펙이 데모(index.html)를 실제 Chrome(`channel: 'chrome'`,
+  브라우저 다운로드 없음)에서 구동해 검증한다. 스크린샷은 `test-results/` 에 저장(gitignore).
+  데모는 `window.__editor` 로 인스턴스를 노출하므로 스펙에서 `setHTML`/`getHTML` 로 상태를 제어한다.
+  그 외 시각/수동 확인은 `pnpm dev` 로 `index.html`·`demo/legacy.html` 을 띄워서 한다.
+- `dist/` 는 gitignore 대상(배포 시 `prepublishOnly` 가 `build` 실행). 로컬에서 데모/E2E 는
+  소스(`src/`)를 직접 참조하므로, 소스만 고쳐도 즉시 반영된다(번들 재빌드는 배포용).
 
 ## 아키텍처
 

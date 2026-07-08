@@ -51,9 +51,11 @@
 
     <pre id="output" aria-live="polite" hidden></pre>
 
-    <!-- 실제 페이지 출력 예시: getHTML() 결과를 .we-content 로 감싸면 에디터와 동일한 스타일이 적용된다 -->
+    <!-- 실제 페이지 출력 예시: getHTML() 결과를 .we-content 로 감싸면 에디터와 동일한 스타일이 적용된다.
+         .we-content 는 글자색(color)만 테마에 맞추므로, 출력 표면의 배경은 컨테이너가 책임진다
+         (background: var(--we-bg)). -->
     <div id="preview" class="we-content" aria-live="polite" hidden
-         style="margin-top:16px;padding:16px;border:1px dashed #cbd0d6;border-radius:8px"></div>
+         style="margin-top:16px;padding:16px;border:1px solid var(--we-border);border-radius:8px;background:var(--we-bg)"></div>
   </main>
 
   <script type="module">
