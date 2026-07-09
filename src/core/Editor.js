@@ -29,7 +29,8 @@ const DEFAULT_FONT_FAMILIES = [
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif',
   },
   { label: '맑은 고딕', value: '"Malgun Gothic", "맑은 고딕", sans-serif' },
-  { label: 'Noto Sans', value: '"Noto Sans KR", "Noto Sans", sans-serif' },
+  // 본고딕 = Noto Sans KR 의 공식 한국어 이름(Adobe: Source Han Sans/본고딕, Google: Noto Sans KR).
+  { label: '본고딕', value: '"Noto Sans KR", "Noto Sans", sans-serif' },
   { label: '나눔고딕', value: '"Nanum Gothic", "나눔고딕", sans-serif' },
   { label: 'Pretendard', value: 'Pretendard, "Pretendard Variable", sans-serif' },
 ];

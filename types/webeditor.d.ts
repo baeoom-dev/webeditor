@@ -27,7 +27,7 @@ export interface EditorConfig {
   fontSizes?: string[];
   /**
    * 글꼴 목록. label 은 선택기에 표시되고 value 는 CSS font-family 스택으로 적용된다.
-   * 기본: 기본(시스템), 맑은 고딕, Noto Sans, 나눔고딕, Pretendard.
+   * 기본: 기본(시스템), 맑은 고딕, 본고딕(Noto Sans KR), 나눔고딕, Pretendard.
    * 웹폰트는 '@baeoom/webeditor/fonts' (webeditor-fonts.css) 로 로드한다.
    */
   fontFamilies?: Array<{ label: string; value: string }>;

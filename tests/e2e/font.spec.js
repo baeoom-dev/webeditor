@@ -25,7 +25,7 @@ test.beforeEach(async ({ page }) => {
 
 test('글꼴 선택기에 기본 글꼴 목록이 나온다', async ({ page }) => {
   const options = await page.locator('select[aria-label="글꼴"] option').allTextContents();
-  expect(options).toEqual(['글꼴', '기본', '맑은 고딕', 'Noto Sans', '나눔고딕', 'Pretendard']);
+  expect(options).toEqual(['글꼴', '기본', '맑은 고딕', '본고딕', '나눔고딕', 'Pretendard']);
 });
 
 test('글꼴을 선택하면 font-family 스타일이 적용되고 sanitize 를 통과한다', async ({ page }) => {
