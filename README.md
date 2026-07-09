@@ -55,13 +55,13 @@ npm 배포 시 CDN 으로도 사용 가능:
 
 ```bash
 pnpm install
-pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
+pnpm build     # dist/ 에 esm/iife/css/fonts-css/d.ts 생성
 ```
 
 | 산출물 | 용도 | 크기 |
 |---|---|---|
-| `dist/webeditor.esm.js` | `import` (소비자 번들러가 최적화) | ~90 KB |
-| `dist/webeditor.iife.min.js` | `<script>` 태그, 전역 `WebEditor` (압축) | ~57 KB |
+| `dist/webeditor.esm.js` | `import` (소비자 번들러가 최적화) | ~99 KB |
+| `dist/webeditor.iife.min.js` | `<script>` 태그, 전역 `WebEditor` (압축) | ~63 KB |
 | `dist/webeditor.css` | 스타일시트 (압축) | ~10 KB |
 | `dist/webeditor-fonts.css` | 선택형 웹폰트 로더 (옵션) | ~1 KB |
 | `dist/webeditor.d.ts` | TypeScript 타입 | — |
@@ -271,11 +271,13 @@ editor.getTheme();
 
 ## 웹접근성
 
-- 툴바: `role="toolbar"` + roving tabindex(방향키 이동), 토글 버튼 `aria-pressed`
+- 툴바(메인·표 컨텍스트 모두): `role="toolbar"` + roving tabindex(방향키 이동), 토글 버튼 `aria-pressed`
 - 편집 영역: `role="textbox"`, `aria-multiline`, `aria-label`
 - 다이얼로그: `role="dialog"` + `aria-modal`, 포커스 트랩, `Esc` 닫기, 포커스 복원
 - 색상/이모지 팝오버: `role="grid"` + 방향키 이동
-- 이미지 대체 텍스트(alt) 입력 지원
+- 이미지 대체 텍스트(alt): 삽입 시 입력 + 삽입 후 더블클릭으로 수정
+- 표 캡션: `<caption>` 으로 표의 이름 제공(출력 시 스크린리더 전용)
+- 글꼴/크기 선택기는 네이티브 `<select>`(기본 키보드·스크린리더 지원)
 - `prefers-reduced-motion` 대응, 포커스 링 제공
 
 ## 브라우저 지원
@@ -293,7 +295,7 @@ src/
 ├── features/      link, image, table, table-edit(컨텍스트 툴바), table-ops(그리드 연산), code
 ├── clipboard/     paste (엑셀 표 보존)
 ├── security/      sanitizer, schema
-└── styles/        editor.css
+└── styles/        editor.css, fonts.css(선택형 웹폰트)
 ```
 
 ## 데모
@@ -311,5 +313,5 @@ pnpm test:e2e   # Playwright E2E — 시스템 Chrome 사용, 데모 서버 자�
 ```
 
 - `tests/e2e/` 의 Playwright 스펙이 데모를 **실제 Chrome**(`channel: 'chrome'`, 브라우저 다운로드
-  없음)에서 구동해 코드 블록·인라인 코드·테마 등을 검증한다.
+  없음)에서 구동해 인라인 서식·코드 블록·표(캡션 포함)·이미지 alt·글꼴(웹폰트 로드)·테마를 검증한다.
 - 실패/스크린샷 산출물은 `test-results/` 에 저장된다(gitignore).
