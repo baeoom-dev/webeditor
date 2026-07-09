@@ -2,7 +2,7 @@
  * 선택형 웹폰트 (옵션 스타일시트).
  *
  * 글꼴 선택 기능(fontFamily)에서 고를 수 있는 웹폰트를 로드한다:
- *   - Noto Sans KR · 나눔고딕(Nanum Gothic) — Google Fonts
+ *   - 본고딕(Noto Sans KR) · 나눔고딕 · 본명조(Noto Serif KR) · 나눔명조 — Google Fonts
  *   - Pretendard — jsDelivr (orioncactus/pretendard)
  * 맑은 고딕(Malgun Gothic)은 Windows 시스템 폰트라 웹폰트로 배포하지 않는다(라이선스).
  * Windows 외 환경에서는 각 스택의 폴백(sans-serif)으로 표시된다.
@@ -11,5 +11,5 @@
  *   <link rel="stylesheet" href=".../webeditor-fonts.css" />   (또는 @baeoom/webeditor/fonts)
  * 오프라인/사내망 등 외부 CDN 이 차단된 환경이면 이 파일 대신 자체 호스팅 @font-face 를 쓰면 된다.
  */
-@import url("https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@400;700&display=swap");
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");

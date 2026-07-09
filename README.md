@@ -71,7 +71,7 @@ pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
 | 그룹 | 기능 |
 |---|---|
 | 인라인 서식 | 굵게, 기울임, 밑줄, 취소선, 인라인 코드 |
-| 글자 | 글꼴(맑은 고딕·본고딕·나눔고딕·Pretendard), 글자 크기, 글자 색, 배경 색 |
+| 글자 | 글꼴(Pretendard·본고딕·맑은 고딕·나눔고딕·본명조·나눔명조), 글자 크기, 글자 색, 배경 색 |
 | 목록 | 글머리 기호(UL), 번호(OL), 들여쓰기, 내어쓰기 |
 | 정렬 | 왼쪽 / 가운데 / 오른쪽 / 양쪽 |
 | 삽입 | 링크, 이미지, 표, 코드 블록, 이모지 |
@@ -103,7 +103,7 @@ pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
 | `minHeight` | `240` | 최소 높이(px) |
 | `theme` | `'auto'` | 테마: `'auto'`(시스템 추종) / `'light'` / `'dark'` |
 | `fontSizes` | `['12px'…'32px']` | 글자 크기 목록 |
-| `fontFamilies` | 기본 5종 | 글꼴 목록 `[{ label, value }]` — value 는 CSS font-family 스택 |
+| `fontFamilies` | 기본 7종 | 글꼴 목록 `[{ label, value }]` — value 는 CSS font-family 스택 |
 | `features` | 전체 | 활성화할 기능 이름 배열 |
 | `onChange` | — | `(editor) => void` 변경 콜백 |
 
@@ -208,10 +208,10 @@ editor.destroy();          // DOM 제거 + 리스너 해제
 ## 글꼴
 
 툴바의 **글꼴 선택기**로 선택 영역(또는 커서가 놓인 단어 이후 입력)의 서체를 바꾼다.
-기본 목록: **기본(시스템)** · **맑은 고딕** · **본고딕(Noto Sans KR)** · **나눔고딕** · **Pretendard**.
+기본 목록(사용 빈도순): **기본(시스템)** · **Pretendard** · **본고딕(Noto Sans KR)** · **맑은 고딕** · **나눔고딕** · **본명조(Noto Serif KR)** · **나눔명조**.
 적용 결과는 `span[style="font-family: …"]` 로 저장되며 새니타이저 화이트리스트를 통과한다.
 
-웹폰트(Noto Sans KR·나눔고딕·Pretendard)는 옵션 스타일시트로 로드한다:
+웹폰트(본고딕·나눔고딕·본명조·나눔명조·Pretendard)는 옵션 스타일시트로 로드한다:
 
 ```js
 import '@baeoom/webeditor/fonts';   // 또는 <link href=".../webeditor-fonts.css">

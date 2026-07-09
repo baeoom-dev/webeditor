@@ -25,7 +25,9 @@ test.beforeEach(async ({ page }) => {
 
 test('글꼴 선택기에 기본 글꼴 목록이 나온다', async ({ page }) => {
   const options = await page.locator('select[aria-label="글꼴"] option').allTextContents();
-  expect(options).toEqual(['글꼴', '기본', '맑은 고딕', '본고딕', '나눔고딕', 'Pretendard']);
+  expect(options).toEqual([
+    '글꼴', '기본', 'Pretendard', '본고딕', '맑은 고딕', '나눔고딕', '본명조', '나눔명조',
+  ]);
 });
 
 test('글꼴을 선택하면 font-family 스타일이 적용되고 sanitize 를 통과한다', async ({ page }) => {
@@ -43,6 +45,20 @@ test('선택한 웹폰트가 실제로 로드된다 (나눔고딕)', async ({ pa
   const loaded = await page.evaluate(async () => {
     await document.fonts.ready;
     return document.fonts.check('16px "Nanum Gothic"');
+  });
+  expect(loaded).toBe(true);
+});
+
+test('명조 웹폰트가 실제로 로드된다 (본명조)', async ({ page }) => {
+  await selectFirstParagraph(page, '<p>본명조 로드 확인</p>');
+  await page.locator('select[aria-label="글꼴"]').selectOption({ label: '본명조' });
+
+  const html = await page.evaluate(() => window.__editor.getHTML());
+  expect(html).toMatch(/Noto Serif KR/i);
+
+  const loaded = await page.evaluate(async () => {
+    await document.fonts.ready;
+    return document.fonts.check('16px "Noto Serif KR"');
   });
   expect(loaded).toBe(true);
 });

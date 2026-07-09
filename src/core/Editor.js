@@ -20,19 +20,21 @@ import { handlePaste } from '../clipboard/paste.js';
 import { sanitizeHtml } from '../security/sanitizer.js';
 
 const DEFAULT_FONT_SIZES = ['12px', '14px', '16px', '18px', '24px', '32px'];
-// 기본 글꼴 목록. '기본' 은 에디터 기본 스택(한글·영문 시스템 폰트)으로 되돌린다.
-// 맑은 고딕은 Windows 시스템 폰트(웹폰트 배포 불가), 나머지 셋은 webeditor-fonts.css 로 로드.
+// 기본 글꼴 목록(사용 빈도순). '기본' 은 에디터 기본 스택(한글·영문 시스템 폰트)으로 되돌린다.
+// 맑은 고딕은 Windows 시스템 폰트(웹폰트 배포 불가), 나머지는 webeditor-fonts.css 로 로드.
+// 본고딕/본명조 = Noto Sans/Serif KR 의 공식 한국어 이름(Adobe: Source Han Sans/Serif).
 const DEFAULT_FONT_FAMILIES = [
   {
     label: '기본',
     value:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif',
   },
-  { label: '맑은 고딕', value: '"Malgun Gothic", "맑은 고딕", sans-serif' },
-  // 본고딕 = Noto Sans KR 의 공식 한국어 이름(Adobe: Source Han Sans/본고딕, Google: Noto Sans KR).
-  { label: '본고딕', value: '"Noto Sans KR", "Noto Sans", sans-serif' },
-  { label: '나눔고딕', value: '"Nanum Gothic", "나눔고딕", sans-serif' },
   { label: 'Pretendard', value: 'Pretendard, "Pretendard Variable", sans-serif' },
+  { label: '본고딕', value: '"Noto Sans KR", "Noto Sans", sans-serif' },
+  { label: '맑은 고딕', value: '"Malgun Gothic", "맑은 고딕", sans-serif' },
+  { label: '나눔고딕', value: '"Nanum Gothic", "나눔고딕", sans-serif' },
+  { label: '본명조', value: '"Noto Serif KR", serif' },
+  { label: '나눔명조', value: '"Nanum Myeongjo", "나눔명조", serif' },
 ];
 const DEFAULT_FEATURES = [
   'bold', 'italic', 'underline', 'strikethrough', 'code', 'fontFamily', 'fontSize', 'color', 'backColor',
