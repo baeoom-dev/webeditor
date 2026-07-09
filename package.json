@@ -16,6 +16,7 @@
       "default": "./dist/webeditor.esm.js"
     },
     "./css": "./dist/webeditor.css",
+    "./fonts": "./dist/webeditor-fonts.css",
     "./dist/*": "./dist/*"
   },
   "files": [

@@ -50,13 +50,19 @@ await build({
   banner: { css: banner },
 });
 
-// 4) 타입 정의 복사
+// 4) 폰트 CSS (외부 CDN @import 만 담은 옵션 파일 — 그대로 복사, 배너만 부착)
+{
+  const fontsCss = await readFile(path.join(root, 'src/styles/fonts.css'), 'utf8');
+  await writeFile(path.join(dist, 'webeditor-fonts.css'), `${banner}\n${fontsCss}`);
+}
+
+// 5) 타입 정의 복사
 await copyFile(path.join(root, 'types/webeditor.d.ts'), path.join(dist, 'webeditor.d.ts'));
 
 // 산출물 크기 리포트
 const { stat } = await import('node:fs/promises');
 const report = [];
-for (const f of ['webeditor.esm.js', 'webeditor.iife.min.js', 'webeditor.css', 'webeditor.d.ts']) {
+for (const f of ['webeditor.esm.js', 'webeditor.iife.min.js', 'webeditor.css', 'webeditor-fonts.css', 'webeditor.d.ts']) {
   const s = await stat(path.join(dist, f));
   report.push(`  ${f.padEnd(24)} ${(s.size / 1024).toFixed(1)} KB`);
 }

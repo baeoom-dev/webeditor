@@ -133,6 +133,11 @@ html[data-we-theme="dark"] .we-content,
   cursor: pointer;
 }
 
+/* 글꼴 선택기: 긴 글꼴 이름이 툴바를 밀지 않도록 폭 제한 */
+.we-fontname-select {
+  max-width: 110px;
+}
+
 .we-fontsize-select:focus-visible {
   outline: none;
   box-shadow: var(--we-focus);

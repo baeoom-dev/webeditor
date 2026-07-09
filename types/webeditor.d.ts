@@ -26,11 +26,17 @@ export interface EditorConfig {
   /** 글자 크기 목록 (기본 ['12px','14px','16px','18px','24px','32px']) */
   fontSizes?: string[];
   /**
+   * 글꼴 목록. label 은 선택기에 표시되고 value 는 CSS font-family 스택으로 적용된다.
+   * 기본: 기본(시스템), 맑은 고딕, Noto Sans, 나눔고딕, Pretendard.
+   * 웹폰트는 '@baeoom/webeditor/fonts' (webeditor-fonts.css) 로 로드한다.
+   */
+  fontFamilies?: Array<{ label: string; value: string }>;
+  /**
    * 활성화할 기능 목록. 기본은 전체.
-   * 'bold' | 'italic' | 'underline' | 'strikethrough' | 'code' | 'fontSize'
-   * | 'color' | 'backColor' | 'ul' | 'ol' | 'align' | 'outdent' | 'indent'
-   * | 'link' | 'image' | 'table' | 'codeBlock' | 'emoji' | 'removeFormat'
-   * | 'sourceView' | 'theme' | 'undo' | 'redo'
+   * 'bold' | 'italic' | 'underline' | 'strikethrough' | 'code' | 'fontFamily'
+   * | 'fontSize' | 'color' | 'backColor' | 'ul' | 'ol' | 'align' | 'outdent'
+   * | 'indent' | 'link' | 'image' | 'table' | 'codeBlock' | 'emoji'
+   * | 'removeFormat' | 'sourceView' | 'theme' | 'undo' | 'redo'
    */
   features?: string[];
   /** 내용 변경 콜백 */

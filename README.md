@@ -63,6 +63,7 @@ pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
 | `dist/webeditor.esm.js` | `import` (소비자 번들러가 최적화) | ~90 KB |
 | `dist/webeditor.iife.min.js` | `<script>` 태그, 전역 `WebEditor` (압축) | ~57 KB |
 | `dist/webeditor.css` | 스타일시트 (압축) | ~10 KB |
+| `dist/webeditor-fonts.css` | 선택형 웹폰트 로더 (옵션) | ~1 KB |
 | `dist/webeditor.d.ts` | TypeScript 타입 | — |
 
 ## 기능
@@ -70,7 +71,7 @@ pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
 | 그룹 | 기능 |
 |---|---|
 | 인라인 서식 | 굵게, 기울임, 밑줄, 취소선, 인라인 코드 |
-| 글자 | 글자 크기, 글자 색, 배경 색 |
+| 글자 | 글꼴(맑은 고딕·Noto Sans·나눔고딕·Pretendard), 글자 크기, 글자 색, 배경 색 |
 | 목록 | 글머리 기호(UL), 번호(OL), 들여쓰기, 내어쓰기 |
 | 정렬 | 왼쪽 / 가운데 / 오른쪽 / 양쪽 |
 | 삽입 | 링크, 이미지, 표, 코드 블록, 이모지 |
@@ -102,6 +103,7 @@ pnpm build     # dist/ 에 esm/iife/css/d.ts 생성
 | `minHeight` | `240` | 최소 높이(px) |
 | `theme` | `'auto'` | 테마: `'auto'`(시스템 추종) / `'light'` / `'dark'` |
 | `fontSizes` | `['12px'…'32px']` | 글자 크기 목록 |
+| `fontFamilies` | 기본 5종 | 글꼴 목록 `[{ label, value }]` — value 는 CSS font-family 스택 |
 | `features` | 전체 | 활성화할 기능 이름 배열 |
 | `onChange` | — | `(editor) => void` 변경 콜백 |
 
@@ -202,6 +204,33 @@ editor.destroy();          // DOM 제거 + 리스너 해제
 
 > 구조 편집은 DOM 을 직접 변형하므로 브라우저 네이티브 `Ctrl+Z`(execCommand undo)에는
 > 기록되지 않는다(표 삽입과 동일). 표 삽입 자체와 마찬가지 제약이다.
+
+## 글꼴
+
+툴바의 **글꼴 선택기**로 선택 영역(또는 커서가 놓인 단어 이후 입력)의 서체를 바꾼다.
+기본 목록: **기본(시스템)** · **맑은 고딕** · **Noto Sans** · **나눔고딕** · **Pretendard**.
+적용 결과는 `span[style="font-family: …"]` 로 저장되며 새니타이저 화이트리스트를 통과한다.
+
+웹폰트(Noto Sans KR·나눔고딕·Pretendard)는 옵션 스타일시트로 로드한다:
+
+```js
+import '@baeoom/webeditor/fonts';   // 또는 <link href=".../webeditor-fonts.css">
+```
+
+- **출력 페이지에도 같은 폰트 CSS 를 포함**해야 저장된 글꼴이 동일하게 보인다.
+- 맑은 고딕은 Windows 시스템 폰트라 웹폰트로 배포하지 않는다(라이선스) — Windows 외
+  환경에서는 스택 폴백(sans-serif)으로 표시된다.
+- 웹폰트는 Google Fonts·jsDelivr CDN 에서 로드한다. 오프라인/사내망 환경이면 이 파일 대신
+  자체 호스팅 `@font-face` 를 쓰고, `fontFamilies` 옵션으로 목록을 교체하면 된다.
+
+```js
+const editor = createEditor('#editor', {
+  fontFamilies: [
+    { label: '본고딕', value: '"Noto Sans KR", sans-serif' },
+    { label: '명조', value: '"Noto Serif KR", serif' },
+  ],
+});
+```
 
 ## 코드 블록 / 인라인 코드
 

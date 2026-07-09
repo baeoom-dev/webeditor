@@ -20,8 +20,21 @@ import { handlePaste } from '../clipboard/paste.js';
 import { sanitizeHtml } from '../security/sanitizer.js';
 
 const DEFAULT_FONT_SIZES = ['12px', '14px', '16px', '18px', '24px', '32px'];
+// 기본 글꼴 목록. '기본' 은 에디터 기본 스택(한글·영문 시스템 폰트)으로 되돌린다.
+// 맑은 고딕은 Windows 시스템 폰트(웹폰트 배포 불가), 나머지 셋은 webeditor-fonts.css 로 로드.
+const DEFAULT_FONT_FAMILIES = [
+  {
+    label: '기본',
+    value:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif',
+  },
+  { label: '맑은 고딕', value: '"Malgun Gothic", "맑은 고딕", sans-serif' },
+  { label: 'Noto Sans', value: '"Noto Sans KR", "Noto Sans", sans-serif' },
+  { label: '나눔고딕', value: '"Nanum Gothic", "나눔고딕", sans-serif' },
+  { label: 'Pretendard', value: 'Pretendard, "Pretendard Variable", sans-serif' },
+];
 const DEFAULT_FEATURES = [
-  'bold', 'italic', 'underline', 'strikethrough', 'code', 'fontSize', 'color', 'backColor',
+  'bold', 'italic', 'underline', 'strikethrough', 'code', 'fontFamily', 'fontSize', 'color', 'backColor',
   'ul', 'ol', 'align', 'outdent', 'indent', 'link', 'image', 'table', 'codeBlock', 'emoji',
   'removeFormat', 'sourceView', 'theme', 'undo', 'redo',
 ];
@@ -53,6 +66,7 @@ export class Editor {
       minHeight: 240,
       theme: 'auto',
       fontSizes: DEFAULT_FONT_SIZES,
+      fontFamilies: DEFAULT_FONT_FAMILIES,
       features: DEFAULT_FEATURES,
       ...config,
     };
@@ -152,6 +166,7 @@ export class Editor {
       this.sourceArea.hidden = false;
       this.toolbar.setDisabled(true, ['sourceView']);
       if (this._fontSizeSelect) this._fontSizeSelect.disabled = true;
+      if (this._fontFamilySelect) this._fontFamilySelect.disabled = true;
       if (btn) btn.setAttribute('aria-pressed', 'true');
       this.sourceArea.focus();
     } else {
@@ -161,6 +176,7 @@ export class Editor {
       this.content.hidden = false;
       this.toolbar.setDisabled(false);
       if (this._fontSizeSelect) this._fontSizeSelect.disabled = false;
+      if (this._fontFamilySelect) this._fontFamilySelect.disabled = false;
       if (btn) btn.setAttribute('aria-pressed', 'false');
       this.content.focus();
       this._emitChange();
@@ -340,10 +356,16 @@ export class Editor {
 
     this.toolbar = new Toolbar({ groups, label: '서식 도구 모음' });
 
-    // 폰트 크기 선택기(네이티브 select — 기본 접근성 우수).
+    // 폰트 크기/글꼴 선택기(네이티브 select — 기본 접근성 우수).
+    // 크기를 먼저 넣고 글꼴을 나중에 firstChild 로 넣어, 최종 순서는 [글꼴][크기].
     if (has('fontSize')) {
       const wrap = this._buildFontSizeSelect();
       this._fontSizeSelect = wrap.querySelector('select');
+      this.toolbar.el.insertBefore(wrap, this.toolbar.el.firstChild);
+    }
+    if (has('fontFamily')) {
+      const wrap = this._buildFontFamilySelect();
+      this._fontFamilySelect = wrap.querySelector('select');
       this.toolbar.el.insertBefore(wrap, this.toolbar.el.firstChild);
     }
   }
@@ -387,6 +409,35 @@ export class Editor {
         picker.open(btn);
       },
     };
+  }
+
+  _buildFontFamilySelect() {
+    const wrap = document.createElement('label');
+    wrap.className = 'we-fontsize we-fontname';
+    const sr = document.createElement('span');
+    sr.className = 'we-visually-hidden';
+    sr.textContent = '글꼴';
+    const select = document.createElement('select');
+    select.className = 'we-fontsize-select we-fontname-select';
+    select.setAttribute('aria-label', '글꼴');
+    const placeholder = new Option('글꼴', '');
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    select.add(placeholder);
+    for (const family of this.config.fontFamilies) {
+      const opt = new Option(family.label, family.value);
+      opt.style.fontFamily = family.value; // 목록에서 미리보기
+      select.add(opt);
+    }
+    select.addEventListener('mousedown', () => this.selection.save());
+    select.addEventListener('change', () => {
+      const family = select.value;
+      if (!family) return;
+      this._run(() => commands.fontName(family));
+      select.selectedIndex = 0;
+    });
+    wrap.append(sr, select);
+    return wrap;
   }
 
   _buildFontSizeSelect() {
