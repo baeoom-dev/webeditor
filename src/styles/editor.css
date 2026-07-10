@@ -11,6 +11,7 @@
 .we-table-toolbar,
 .we-color-popover,
 .we-emoji-popover,
+.we-align-popover,
 .we-content {
   --we-bg: #ffffff;
   --we-fg: #1a1a1a;
@@ -55,6 +56,7 @@ html[data-we-theme="dark"] .we-dialog-overlay,
 html[data-we-theme="dark"] .we-table-toolbar,
 html[data-we-theme="dark"] .we-color-popover,
 html[data-we-theme="dark"] .we-emoji-popover,
+html[data-we-theme="dark"] .we-align-popover,
 html[data-we-theme="dark"] .we-content,
 .we-content[data-theme="dark"] {
   --we-bg: #16181d;
@@ -87,6 +89,13 @@ html[data-we-theme="dark"] .we-content,
   background: var(--we-border-strong);
 }
 
+/* 그룹 래퍼: 줄바꿈이 그룹 경계에서만 일어나게 한다. */
+.we-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
 .we-tool-btn {
   display: inline-flex;
   align-items: center;
@@ -114,6 +123,16 @@ html[data-we-theme="dark"] .we-content,
 .we-tool-btn[aria-pressed="true"] {
   background: var(--we-accent-soft);
   color: var(--we-accent);
+}
+
+/* 드롭다운 메뉴 버튼: 아이콘 옆 캐럿만큼 폭을 넓힌다. */
+.we-tool-btn--menu {
+  width: auto;
+  padding: 0 4px 0 6px;
+  gap: 2px;
+}
+.we-tool-btn--menu .we-caret {
+  color: var(--we-muted);
 }
 
 .we-fontsize {
@@ -472,9 +491,10 @@ html[data-we-theme="dark"] .we-content,
 .we-image-drop-inner svg { width: 28px; height: 28px; color: var(--we-muted); }
 .we-image-drop p { margin: 0; font-size: 13px; }
 
-/* ---------- 색상/이모지 팝오버 ---------- */
+/* ---------- 색상/이모지/정렬 팝오버 ---------- */
 .we-color-popover,
-.we-emoji-popover {
+.we-emoji-popover,
+.we-align-popover {
   z-index: 2147483000;
   padding: 10px;
   background: var(--we-bg, #fff);
@@ -482,6 +502,35 @@ html[data-we-theme="dark"] .we-content,
   border-radius: var(--we-radius);
   box-shadow: var(--we-shadow);
   font-family: var(--we-font);
+}
+
+/* 정렬 드롭다운 메뉴 */
+.we-align-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  min-width: 128px;
+}
+.we-align-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: var(--we-radius-sm);
+  background: transparent;
+  color: var(--we-fg);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.we-align-option:hover { background: var(--we-surface-hover); }
+.we-align-option:focus-visible { outline: none; box-shadow: var(--we-focus); }
+.we-align-option[aria-checked="true"] {
+  background: var(--we-accent-soft);
+  color: var(--we-accent);
 }
 
 .we-color-grid,

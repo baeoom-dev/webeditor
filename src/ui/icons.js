@@ -31,13 +31,21 @@ export const icons = {
   image: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M4 17l5-5 4 4 3-3 4 4"/>'),
   table: svg('<rect x="3" y="4" width="18" height="16" rx="1"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/>'),
   emoji: svg('<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>'),
-  code: svg('<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'),
-  codeInline: svg('<path d="M8 4c-2 0-3 1-3 3v2c0 1-.6 2-2 2 1.4 0 2 1 2 2v2c0 2 1 3 3 3"/><path d="M16 4c2 0 3 1 3 3v2c0 1 .6 2 2 2-1.4 0-2 1-2 2v2c0 2-1 3-3 3"/>'),
-  codeBlock: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><polyline points="9 10 7 12 9 14"/><polyline points="13 10 15 12 13 14"/>'),
+  // 소스 보기: 접힌 모서리 문서(파일) + 꺾쇠 — "HTML 소스 파일".
+  code: svg('<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><polyline points="10 11.5 8 13.5 10 15.5"/><polyline points="14 11.5 16 13.5 14 15.5"/>'),
+  // 인라인 코드: </> — 꺾쇠 + 슬래시.
+  codeInline: svg('<polyline points="8 7 3.5 12 8 17"/><polyline points="16 7 20.5 12 16 17"/><line x1="13.5" y1="5.5" x2="10.5" y2="18.5"/>'),
+  // 코드 블록: 둥근 사각형 안 </>.
+  codeBlock: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><polyline points="9 9.5 6.5 12 9 14.5"/><polyline points="15 9.5 17.5 12 15 14.5"/><line x1="13" y1="8.5" x2="11" y2="15.5"/>'),
   clear: svg('<path d="M4 7h16"/><path d="M10 7l-.5 12"/><path d="M14 7l.5 12"/><path d="M7 4h10l-1 3H8z"/>'),
   undo: svg('<path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 1 3 7"/>'),
   redo: svg('<path d="M21 7v6h-6"/><path d="M21 13a9 9 0 1 0-3 7"/>'),
   check: svg('<polyline points="20 6 9 17 4 12"/>'),
+  // 드롭다운 버튼용 소형 캐럿(아이콘 옆에 붙는다).
+  caret:
+    '<svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" ' +
+    'stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ' +
+    'focusable="false" class="we-caret"><path d="M6 9l6 6 6-6"/></svg>',
   close: svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
   moon: svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
   sun: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),

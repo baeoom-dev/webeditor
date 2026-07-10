@@ -27,20 +27,27 @@ export class Toolbar {
     this.el.addEventListener('keydown', (e) => this._onKeydown(e));
   }
 
+  /** 그룹 사이 구분선. Editor 가 셀렉트 그룹을 끼워 넣을 때도 사용한다. */
+  static createSeparator() {
+    const sep = document.createElement('span');
+    sep.className = 'we-toolbar-sep';
+    sep.setAttribute('role', 'separator');
+    sep.setAttribute('aria-orientation', 'vertical');
+    return sep;
+  }
+
   _build() {
     this.groups.forEach((group, gi) => {
-      if (gi > 0) {
-        const sep = document.createElement('span');
-        sep.className = 'we-toolbar-sep';
-        sep.setAttribute('role', 'separator');
-        sep.setAttribute('aria-orientation', 'vertical');
-        this.el.appendChild(sep);
-      }
+      if (gi > 0) this.el.appendChild(Toolbar.createSeparator());
+      // 그룹 래퍼: 폭이 부족할 때 그룹 중간이 아니라 그룹 경계에서 줄바꿈되게 한다.
+      const wrap = document.createElement('span');
+      wrap.className = 'we-toolbar-group';
       for (const item of group) {
         const btn = this._createButton(item);
-        this.el.appendChild(btn);
+        wrap.appendChild(btn);
         this._buttons.push(btn);
       }
+      this.el.appendChild(wrap);
     });
     // roving tabindex: 첫 버튼만 Tab 가능.
     this._buttons.forEach((b, i) => (b.tabIndex = i === 0 ? 0 : -1));
@@ -55,6 +62,11 @@ export class Toolbar {
     btn.setAttribute('title', item.label);
     btn.dataset.name = item.name;
     if (item.toggle) btn.setAttribute('aria-pressed', 'false');
+    if (item.menu) {
+      btn.classList.add('we-tool-btn--menu');
+      btn.setAttribute('aria-haspopup', 'menu');
+      btn.setAttribute('aria-expanded', 'false');
+    }
     // 선택 영역 유지.
     btn.addEventListener('mousedown', (e) => e.preventDefault());
     btn.addEventListener('click', () => item.action(btn));
@@ -114,4 +126,5 @@ export class Toolbar {
  * @property {(btn: HTMLElement) => void} action 클릭 동작
  * @property {boolean} [toggle] 토글 버튼 여부
  * @property {string} [queryName] execCommand 상태 조회명(굵게 등)
+ * @property {boolean} [menu] 드롭다운 메뉴 버튼 여부(aria-haspopup/aria-expanded)
  */

@@ -5,10 +5,11 @@
  * 공개 API: getHTML(), getText(), setHTML(), focus(), destroy().
  */
 import { SelectionManager } from './Selection.js';
-import { commands } from './commands.js';
+import { commands, queryState } from './commands.js';
 import { Toolbar } from '../ui/Toolbar.js';
 import { icons } from '../ui/icons.js';
 import { ColorPicker } from '../ui/ColorPicker.js';
+import { AlignPicker, ALIGN_OPTIONS } from '../ui/AlignPicker.js';
 import { EmojiPicker } from '../ui/EmojiPicker.js';
 import { Dialog } from '../ui/Dialog.js';
 import { openLinkDialog } from '../features/link.js';
@@ -284,6 +285,7 @@ export class Editor {
 
   _updateToolbar() {
     this.toolbar.updateStates();
+    this._syncAlignIcon();
   }
 
   _run(fn) {
@@ -295,6 +297,12 @@ export class Editor {
   _buildToolbar() {
     const has = (f) => this.config.features.includes(f);
     const groups = [];
+
+    // 관례(Google Docs 등)에 따라 실행 취소/다시 실행을 맨 앞에 둔다.
+    const historyGroup = [];
+    if (has('undo')) historyGroup.push(this._item('undo', icons.undo, '실행 취소 (Ctrl+Z)', () => this._run(commands.undo)));
+    if (has('redo')) historyGroup.push(this._item('redo', icons.redo, '다시 실행 (Ctrl+Y)', () => this._run(commands.redo)));
+    if (historyGroup.length) groups.push(historyGroup);
 
     const inline = [];
     if (has('bold')) inline.push(this._item('bold', icons.bold, '굵게 (Ctrl+B)', () => this._run(commands.bold), 'bold'));
@@ -309,21 +317,14 @@ export class Editor {
     if (has('backColor')) fontGroup.push(this._colorItem('backColor', icons.bgColor, '배경 색', (c) => commands.backColor(c)));
     if (fontGroup.length) groups.push(fontGroup);
 
-    const listGroup = [];
-    if (has('ul')) listGroup.push(this._item('ul', icons.ul, '글머리 기호 목록', () => this._run(commands.unorderedList)));
-    if (has('ol')) listGroup.push(this._item('ol', icons.ol, '번호 매기기 목록', () => this._run(commands.orderedList)));
-    if (has('outdent')) listGroup.push(this._item('outdent', icons.outdent, '내어쓰기', () => this._run(commands.outdent)));
-    if (has('indent')) listGroup.push(this._item('indent', icons.indent, '들여쓰기', () => this._run(commands.indent)));
-    if (listGroup.length) groups.push(listGroup);
-
-    const alignGroup = [];
-    if (has('align')) {
-      alignGroup.push(this._item('alignLeft', icons.alignLeft, '왼쪽 정렬', () => this._run(commands.alignLeft)));
-      alignGroup.push(this._item('alignCenter', icons.alignCenter, '가운데 정렬', () => this._run(commands.alignCenter)));
-      alignGroup.push(this._item('alignRight', icons.alignRight, '오른쪽 정렬', () => this._run(commands.alignRight)));
-      alignGroup.push(this._item('alignJustify', icons.alignJustify, '양쪽 정렬', () => this._run(commands.alignJustify)));
-    }
-    if (alignGroup.length) groups.push(alignGroup);
+    // 문단 그룹: 정렬(드롭다운 1개) + 목록/들여쓰기.
+    const paragraphGroup = [];
+    if (has('align')) paragraphGroup.push(this._alignItem());
+    if (has('ul')) paragraphGroup.push(this._item('ul', icons.ul, '글머리 기호 목록', () => this._run(commands.unorderedList)));
+    if (has('ol')) paragraphGroup.push(this._item('ol', icons.ol, '번호 매기기 목록', () => this._run(commands.orderedList)));
+    if (has('outdent')) paragraphGroup.push(this._item('outdent', icons.outdent, '내어쓰기', () => this._run(commands.outdent)));
+    if (has('indent')) paragraphGroup.push(this._item('indent', icons.indent, '들여쓰기', () => this._run(commands.indent)));
+    if (paragraphGroup.length) groups.push(paragraphGroup);
 
     const insertGroup = [];
     if (has('link')) insertGroup.push(this._item('link', icons.link, '링크', () => openLinkDialog(this._ctx())));
@@ -353,24 +354,66 @@ export class Editor {
         action: () => this.setTheme(this._effectiveTheme() === 'dark' ? 'light' : 'dark'),
       });
     }
-    if (has('undo')) utilGroup.push(this._item('undo', icons.undo, '실행 취소 (Ctrl+Z)', () => this._run(commands.undo)));
-    if (has('redo')) utilGroup.push(this._item('redo', icons.redo, '다시 실행 (Ctrl+Y)', () => this._run(commands.redo)));
     if (utilGroup.length) groups.push(utilGroup);
 
     this.toolbar = new Toolbar({ groups, label: '서식 도구 모음' });
 
-    // 폰트 크기/글꼴 선택기(네이티브 select — 기본 접근성 우수).
-    // 크기를 먼저 넣고 글꼴을 나중에 firstChild 로 넣어, 최종 순서는 [글꼴][크기].
-    if (has('fontSize')) {
-      const wrap = this._buildFontSizeSelect();
-      this._fontSizeSelect = wrap.querySelector('select');
-      this.toolbar.el.insertBefore(wrap, this.toolbar.el.firstChild);
-    }
+    // 폰트 글꼴/크기 선택기(네이티브 select — 기본 접근성 우수).
+    // 하나의 그룹으로 묶어 실행 취소/다시 실행 그룹 바로 뒤에 끼워 넣는다.
+    const selectsGroup = document.createElement('span');
+    selectsGroup.className = 'we-toolbar-group';
     if (has('fontFamily')) {
       const wrap = this._buildFontFamilySelect();
       this._fontFamilySelect = wrap.querySelector('select');
-      this.toolbar.el.insertBefore(wrap, this.toolbar.el.firstChild);
+      selectsGroup.appendChild(wrap);
     }
+    if (has('fontSize')) {
+      const wrap = this._buildFontSizeSelect();
+      this._fontSizeSelect = wrap.querySelector('select');
+      selectsGroup.appendChild(wrap);
+    }
+    if (selectsGroup.childElementCount) {
+      const historyBtn = this.toolbar.getButton('redo') || this.toolbar.getButton('undo');
+      if (historyBtn) {
+        historyBtn.parentElement.after(Toolbar.createSeparator(), selectsGroup);
+      } else {
+        this.toolbar.el.prepend(selectsGroup, Toolbar.createSeparator());
+      }
+    }
+  }
+
+  /** 정렬 드롭다운 항목. 버튼 아이콘이 현재 정렬 상태를 따라간다. */
+  _alignItem() {
+    this._alignState = 'alignLeft';
+    const picker = new AlignPicker({
+      getCurrent: () => this._alignState,
+      onSelect: (name) => {
+        this._run(() => commands[name]());
+        this._syncAlignIcon();
+      },
+    });
+    this._pickers.push(picker);
+    return {
+      name: 'align',
+      icon: icons.alignLeft + icons.caret,
+      label: '정렬',
+      menu: true,
+      action: (btn) => {
+        this.selection.save();
+        picker.open(btn);
+      },
+    };
+  }
+
+  /** 커서 위치의 정렬 상태를 조회해 정렬 버튼 아이콘에 반영한다. */
+  _syncAlignIcon() {
+    const btn = this.toolbar && this.toolbar.getButton('align');
+    if (!btn) return;
+    const current =
+      ALIGN_OPTIONS.find((o) => o.name !== 'alignLeft' && queryState(o.queryName))?.name || 'alignLeft';
+    if (current === this._alignState) return;
+    this._alignState = current;
+    btn.innerHTML = icons[current] + icons.caret;
   }
 
   _item(name, icon, label, action, queryName) {
