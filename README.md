@@ -39,6 +39,7 @@ const html = editor.getHTML();
 ### 레거시 페이지 (IIFE — `<script>` 태그, Classic ASP 등)
 
 ```html
+<link rel="stylesheet" href="/lib/webeditor/webeditor-fonts.css" />
 <link rel="stylesheet" href="/lib/webeditor/webeditor.css" />
 <div id="editor"></div>
 
