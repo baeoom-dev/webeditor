@@ -22,12 +22,14 @@ export class ColorPicker {
     this.label = label;
     this.onSelect = onSelect;
     this._popover = null;
+    this._anchor = null;
     this._onDocDown = this._onDocDown.bind(this);
   }
 
   /** 앵커 버튼 근처에 팝오버를 연다. */
   open(anchor) {
     this.close();
+    this._anchor = anchor;
     const pop = document.createElement('div');
     pop.className = 'we-color-popover';
     pop.setAttribute('role', 'dialog');
@@ -49,7 +51,7 @@ export class ColorPicker {
       // 선택 유지: mousedown 기본동작(포커스 이동) 차단.
       cell.addEventListener('mousedown', (e) => e.preventDefault());
       cell.addEventListener('click', () => {
-        this.onSelect(color);
+        this._select(color);
         this.close();
       });
       cell.addEventListener('keydown', (e) => this._onGridKey(e, grid));
@@ -63,7 +65,7 @@ export class ColorPicker {
     input.setAttribute('aria-label', `${this.label} 사용자 지정`);
     input.addEventListener('mousedown', (e) => e.preventDefault());
     input.addEventListener('input', () => {
-      this.onSelect(input.value);
+      this._select(input.value);
     });
     input.addEventListener('change', () => this.close());
     const customLabel = document.createElement('span');
@@ -108,6 +110,13 @@ export class ColorPicker {
     if (popRect.right > window.innerWidth) {
       pop.style.left = `${window.innerWidth - popRect.width - 8 + window.scrollX}px`;
     }
+  }
+
+  /** 선택 콜백 실행 + 앵커 버튼 아이콘의 색상 바(.we-color-bar)에 선택색을 반영한다. */
+  _select(color) {
+    this.onSelect(color);
+    const bar = this._anchor && this._anchor.querySelector('.we-color-bar');
+    if (bar) bar.style.stroke = color;
   }
 
   _onDocDown(e) {
