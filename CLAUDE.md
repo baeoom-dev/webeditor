@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-`@baeoom/webeditor` — 런타임 의존성 0의 **Vanilla JS WYSIWYG 에디터**. 세 가지가 설계의 최우선 축이다:
+`@baeoom-dev/webeditor` — 런타임 의존성 0의 **Vanilla JS WYSIWYG 에디터**. 세 가지가 설계의 최우선 축이다:
 
 1. **보안(XSS 방지)** — 신뢰할 수 없는 모든 HTML은 화이트리스트 새니타이저를 통과한다.
 2. **웹접근성(WAI-ARIA)** — 툴바 roving tabindex, 다이얼로그 포커스 트랩 등.

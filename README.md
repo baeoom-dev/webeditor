@@ -1,4 +1,4 @@
-# @baeoom/webeditor
+# @baeoom-dev/webeditor
 
 의존성 없는 **Vanilla JS WYSIWYG 웹 에디터**. 보안(XSS 방지)과 웹접근성을 최우선으로 설계했고,
 엑셀/스프레드시트 표를 붙여넣을 때 색·테두리·굵기 등 서식을 최대한 보존한다.
@@ -9,8 +9,21 @@
 
 ## 설치
 
+**사내 전용 패키지** — GitHub Packages(비공개 레지스트리)로 배포된다. 소비하는 레포에
+`.npmrc` 를 먼저 추가한다:
+
+```ini
+# .npmrc (소비하는 레포 루트)
+@baeoom-dev:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+- 로컬 개발: `read:packages` 권한의 [Personal Access Token](https://github.com/settings/tokens)을
+  발급해 `GITHUB_TOKEN` 환경 변수로 설정 (또는 `~/.npmrc` 에 토큰을 직접 기재).
+- GitHub Actions CI: 기본 제공 `secrets.GITHUB_TOKEN` 그대로 사용 가능.
+
 ```bash
-pnpm add @baeoom/webeditor   # 또는 npm i / yarn add
+pnpm add @baeoom-dev/webeditor   # 또는 npm i / yarn add
 ```
 
 ## 사용법
@@ -18,8 +31,8 @@ pnpm add @baeoom/webeditor   # 또는 npm i / yarn add
 ### 모던 앱 (ESM — Next.js, Vite 등)
 
 ```js
-import { createEditor } from '@baeoom/webeditor';
-import '@baeoom/webeditor/css';
+import { createEditor } from '@baeoom-dev/webeditor';
+import '@baeoom-dev/webeditor/css';
 
 const editor = createEditor('#editor', {
   placeholder: '내용을 입력하세요…',
@@ -49,8 +62,8 @@ const html = editor.getHTML();
 </script>
 ```
 
-npm 배포 시 CDN 으로도 사용 가능:
-`https://cdn.jsdelivr.net/npm/@baeoom/webeditor/dist/webeditor.iife.min.js`
+> 비공개 패키지라 공개 CDN(jsDelivr/unpkg)은 사용할 수 없다. 레거시 페이지에서는
+> `pnpm build` 산출물(`dist/`)을 해당 서비스의 정적 경로(예: `/lib/webeditor/`)에 복사해 배포한다.
 
 ### 빌드 (개발자)
 
@@ -66,6 +79,19 @@ pnpm build     # dist/ 에 esm/iife/css/fonts-css/d.ts 생성
 | `dist/webeditor.css` | 스타일시트 (압축) | ~10 KB |
 | `dist/webeditor-fonts.css` | 선택형 웹폰트 로더 (옵션) | ~1 KB |
 | `dist/webeditor.d.ts` | TypeScript 타입 | — |
+
+### 배포 (메인테이너)
+
+버전 태그를 푸시하면 GitHub Actions(`.github/workflows/publish.yml`)가
+GitHub Packages 에 자동 배포한다:
+
+```bash
+npm version patch        # package.json 버전 올리고 v* 태그 생성
+git push --follow-tags   # 태그 푸시 → CI 가 빌드 + publish
+```
+
+태그와 package.json 버전이 다르면 CI 에서 실패한다. 수동 배포가 필요하면
+`write:packages` PAT 로 `pnpm publish` 를 직접 실행한다.
 
 ## 기능
 
@@ -128,7 +154,7 @@ editor.destroy();          // DOM 제거 + 리스너 해제
 에디터와 동일한 외형이 나온다 — 별도 스타일을 새로 작성할 필요가 없다.
 
 ```html
-<link rel="stylesheet" href="/webeditor.css" />        <!-- 또는 @baeoom/webeditor/css -->
+<link rel="stylesheet" href="/webeditor.css" />        <!-- 또는 @baeoom-dev/webeditor/css -->
 
 <article class="we-content">
   <!-- 서버에 저장해 둔 editor.getHTML() 결과 -->
@@ -214,7 +240,7 @@ editor.destroy();          // DOM 제거 + 리스너 해제
 웹폰트(본고딕·나눔고딕·본명조·나눔명조·Pretendard)는 옵션 스타일시트로 로드한다:
 
 ```js
-import '@baeoom/webeditor/fonts';   // 또는 <link href=".../webeditor-fonts.css">
+import '@baeoom-dev/webeditor/fonts';   // 또는 <link href=".../webeditor-fonts.css">
 ```
 
 - **출력 페이지에도 같은 폰트 CSS 를 포함**해야 저장된 글꼴이 동일하게 보인다.

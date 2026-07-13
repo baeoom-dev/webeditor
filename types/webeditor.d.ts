@@ -1,5 +1,5 @@
 /**
- * @baeoom/webeditor 타입 정의
+ * @baeoom-dev/webeditor 타입 정의
  */
 
 /** 에디터 생성 설정 */
@@ -28,7 +28,7 @@ export interface EditorConfig {
   /**
    * 글꼴 목록. label 은 선택기에 표시되고 value 는 CSS font-family 스택으로 적용된다.
    * 기본(사용 빈도순): 기본(시스템), Pretendard, 본고딕, 맑은 고딕, 나눔고딕, 본명조, 나눔명조.
-   * 웹폰트는 '@baeoom/webeditor/fonts' (webeditor-fonts.css) 로 로드한다.
+   * 웹폰트는 '@baeoom-dev/webeditor/fonts' (webeditor-fonts.css) 로 로드한다.
    */
   fontFamilies?: Array<{ label: string; value: string }>;
   /**
