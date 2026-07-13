@@ -301,6 +301,26 @@ html[data-we-theme="dark"] .we-content,
   font-weight: 600;
 }
 
+/* 수식(MathML). 콘텐츠 외형은 .we-content, 편집 크롬은 .we-editor-content 에 둔다. */
+.we-content math {
+  font-size: 1.08em;
+}
+
+.we-content math[display="block"] {
+  margin: 0.6em 0;
+}
+
+/* 편집 영역에서 수식은 원자(contenteditable=false) — 더블클릭 편집 가능함을 표시. */
+.we-editor-content math {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0 2px;
+}
+
+.we-editor-content math:hover {
+  background: var(--we-accent-soft);
+}
+
 /* ---------- 소스보기 ---------- */
 .we-source-area {
   display: block;
@@ -425,6 +445,44 @@ html[data-we-theme="dark"] .we-content,
   gap: 8px;
   font-size: 14px;
   cursor: pointer;
+}
+
+/* 수식 다이얼로그 */
+.we-field-caption { font-size: 13px; font-weight: 600; color: var(--we-fg); }
+
+.we-formula-input {
+  padding: 10px 12px;
+  border: 1px solid var(--we-border-strong);
+  border-radius: var(--we-radius-sm);
+  background: var(--we-bg);
+  color: var(--we-fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.we-formula-input:focus-visible {
+  outline: none;
+  border-color: var(--we-accent);
+  box-shadow: var(--we-focus);
+}
+
+.we-formula-preview {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  border: 1px dashed var(--we-border-strong);
+  border-radius: var(--we-radius-sm);
+  background: var(--we-surface);
+  font-size: 18px;
+  overflow-x: auto;
+}
+.we-formula-preview[data-empty="true"]::before {
+  content: "수식을 입력하면 여기에 표시됩니다";
+  color: var(--we-muted);
+  font-size: 13px;
 }
 
 .we-form-error {

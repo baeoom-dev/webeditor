@@ -15,6 +15,7 @@ import { Dialog } from '../ui/Dialog.js';
 import { openLinkDialog } from '../features/link.js';
 import { openImageDialog, openImageAltDialog, insertImageFile } from '../features/image.js';
 import { openTableDialog } from '../features/table.js';
+import { openFormulaDialog, handleFormulaDelete } from '../features/formula.js';
 import { TableToolbar } from '../features/table-edit.js';
 import { toggleInlineCode, insertCodeBlock, handleCodeBlockEnter } from '../features/code.js';
 import { handlePaste } from '../clipboard/paste.js';
@@ -39,7 +40,7 @@ const DEFAULT_FONT_FAMILIES = [
 ];
 const DEFAULT_FEATURES = [
   'bold', 'italic', 'underline', 'strikethrough', 'code', 'fontFamily', 'fontSize', 'color', 'backColor',
-  'ul', 'ol', 'align', 'outdent', 'indent', 'link', 'image', 'table', 'codeBlock', 'emoji',
+  'ul', 'ol', 'align', 'outdent', 'indent', 'link', 'image', 'table', 'codeBlock', 'formula', 'emoji',
   'removeFormat', 'sourceView', 'theme', 'undo', 'redo',
 ];
 
@@ -271,15 +272,27 @@ export class Editor {
   }
 
   _emitChange() {
+    this._normalizeMath();
     this._updatePlaceholder();
     this._updateToolbar();
     if (typeof this.config.onChange === 'function') this.config.onChange(this);
   }
 
+  /**
+   * 편집 영역의 수식을 원자(atomic)로 유지한다: 커서가 MathML 내부로 들어가
+   * 구조를 깨뜨리지 않게 contenteditable=false 를 stamp 한다.
+   * 이 속성은 화이트리스트 밖이라 getHTML() 새니타이즈 때 제거된다(출력은 순수 MathML).
+   */
+  _normalizeMath() {
+    for (const m of this.content.querySelectorAll('math:not([contenteditable])')) {
+      m.setAttribute('contenteditable', 'false');
+    }
+  }
+
   /** 내용이 비었는지 판단해 data-empty 를 토글한다(플레이스홀더 표시용). */
   _updatePlaceholder() {
     const hasText = (this.content.textContent || '').trim().length > 0;
-    const hasMedia = this.content.querySelector('img, table, hr, ul, ol') !== null;
+    const hasMedia = this.content.querySelector('img, table, hr, ul, ol, math') !== null;
     this.content.dataset.empty = hasText || hasMedia ? 'false' : 'true';
   }
 
@@ -331,6 +344,7 @@ export class Editor {
     if (has('image')) insertGroup.push(this._item('image', icons.image, '이미지', () => openImageDialog(this._ctx())));
     if (has('table')) insertGroup.push(this._item('table', icons.table, '표', () => openTableDialog(this._ctx())));
     if (has('codeBlock')) insertGroup.push(this._item('codeBlock', icons.codeBlock, '코드 블록', () => this._run(() => insertCodeBlock(this.content))));
+    if (has('formula')) insertGroup.push(this._item('formula', icons.formula, '수식', () => openFormulaDialog(this._ctx())));
     if (has('emoji')) insertGroup.push(this._emojiItem());
     if (insertGroup.length) groups.push(insertGroup);
 
@@ -523,16 +537,36 @@ export class Editor {
     this.content.addEventListener('input', () => this._emitChange());
 
     // 코드 블록 안의 Enter 는 <code> 를 쪼개지 않고 줄바꿈으로 처리.
+    // Backspace/Delete 는 커서 인접 수식(contenteditable=false 원자)을 삭제한다.
     this.content.addEventListener('keydown', (e) => {
       if (handleCodeBlockEnter(e, this.content)) this._emitChange();
+      else if (handleFormulaDelete(e, this.content)) this._emitChange();
     });
 
-    // 이미지 더블클릭 → 대체 텍스트(alt) 편집.
+    // 수식 클릭 → 통째로 선택(하이라이트 + Backspace 삭제/입력 교체 가능).
+    this.content.addEventListener('click', (e) => {
+      const math = e.target.closest('math');
+      if (math && this.content.contains(math)) {
+        const range = document.createRange();
+        range.selectNode(math);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    });
+
+    // 이미지 더블클릭 → 대체 텍스트(alt) 편집. 수식 더블클릭 → 수식 편집.
     this.content.addEventListener('dblclick', (e) => {
       const img = e.target.closest('img');
       if (img && this.content.contains(img)) {
         e.preventDefault();
         openImageAltDialog(img, this._ctx());
+        return;
+      }
+      const math = e.target.closest('math');
+      if (math && this.content.contains(math)) {
+        e.preventDefault();
+        openFormulaDialog(this._ctx(), math);
       }
     });
 

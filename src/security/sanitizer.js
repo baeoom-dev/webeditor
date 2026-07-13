@@ -8,6 +8,7 @@
 import {
   DANGEROUS_TAGS,
   ALLOWED_TAGS,
+  MATHML_TAGS,
   ALLOWED_ATTRS,
   ALLOWED_STYLES,
   ALLOWED_LINK_SCHEMES,
@@ -15,6 +16,8 @@ import {
   ALLOWED_DATA_MIME,
   CSS_VALUE_BLOCKLIST,
 } from './schema.js';
+
+export const MATHML_NS = 'http://www.w3.org/1998/Math/MathML';
 
 /** 문자열에서 URL 스킴을 안전하게 추출한다. 제어문자/공백을 제거해 우회를 막는다. */
 function getScheme(url) {
@@ -155,8 +158,11 @@ function unwrap(el) {
   parent.removeChild(el);
 }
 
-/** 노드를 재귀적으로 정리한다. */
-function sanitizeNode(doc, node) {
+/**
+ * 노드를 재귀적으로 정리한다.
+ * @param {boolean} inMath math 서브트리 내부 여부(MathML 네임스페이스 격리 모드)
+ */
+function sanitizeNode(doc, node, inMath = false) {
   if (node.nodeType === Node.COMMENT_NODE) {
     node.remove();
     return;
@@ -165,6 +171,22 @@ function sanitizeNode(doc, node) {
 
   let el = node;
   const tag = el.tagName.toLowerCase();
+
+  // MathML 격리: math 서브트리 안에서는 MathML 네임스페이스 + MATHML_TAGS 만 허용.
+  // 위반(내부에 섞인 HTML 요소, annotation-xml 등 미허용 MathML 요소)은 unwrap 이
+  // 아니라 통째로 제거한다 — unwrap 하면 자식이 HTML 문맥으로 승격돼 mXSS 가 된다.
+  const isMathML = el.namespaceURI === MATHML_NS;
+  if (inMath || isMathML) {
+    if (!isMathML || !MATHML_TAGS.has(tag)) {
+      el.remove();
+      return;
+    }
+    sanitizeAttributes(el, tag);
+    for (const child of Array.from(el.childNodes)) {
+      sanitizeNode(doc, child, true);
+    }
+    return;
+  }
 
   if (DANGEROUS_TAGS.has(tag)) {
     el.remove();

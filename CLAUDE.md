@@ -107,6 +107,19 @@ schema 화이트리스트로 남긴다. `align`/`bgcolor` 같은 레거시 속�
 - 언어 클래스/문법 하이라이팅을 저장하려면 `schema.js` 의 `ALLOWED_ATTRS` 에서 `class`/`data-*` 를
   명시 허용해야 한다(기본 미허용 — XSS 방지).
 
+### 수식(features/formula.js · math/latex-to-mathml.js)
+
+- LaTeX 서브셋을 **네이티브 MathML Core** 로 변환해 삽입한다(의존성 0 유지, 출력 페이지는
+  순수 마크업이라 JS 불필요). 원본 LaTeX 는 `<math data-we-formula>` 에 보존 — 더블클릭
+  재편집의 단일 출처. 편집 영역에서 수식은 원자(atomic): `Editor._normalizeMath()` 가
+  `contenteditable=false` 를 stamp 하고, 이 속성은 새니타이즈 때 제거된다.
+- **보안 불변식**: math 서브트리 안에서는 MathML 네임스페이스 + `schema.js` 의
+  `MATHML_TAGS` 요소만 허용하고, 위반은 unwrap 이 아니라 **통째로 제거**한다(mXSS 차단).
+  `semantics`/`annotation-xml`/`maction`/`mglyph` 와 MathML `href` 속성은 절대 허용 금지.
+- 변환기는 `createElementNS` 로 DOM 을 직접 생성한다(문자열 조립 금지). 새 명령을 추가할 때
+  새 MathML 요소가 필요하면 먼저 `MATHML_TAGS` 에 등록해야 sanitize 왕복에서 살아남는다.
+- 상세 설계: `docs/formula-design.md`
+
 ### 테마(라이트/다크)
 
 - 색상은 전부 CSS 토큰(`--we-*`)이다. 다크 팔레트는 `editor.css` 의 단일 블록에 있고,

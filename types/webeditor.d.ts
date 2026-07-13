@@ -35,7 +35,7 @@ export interface EditorConfig {
    * 활성화할 기능 목록. 기본은 전체.
    * 'bold' | 'italic' | 'underline' | 'strikethrough' | 'code' | 'fontFamily'
    * | 'fontSize' | 'color' | 'backColor' | 'ul' | 'ol' | 'align' | 'outdent'
-   * | 'indent' | 'link' | 'image' | 'table' | 'codeBlock' | 'emoji'
+   * | 'indent' | 'link' | 'image' | 'table' | 'codeBlock' | 'formula' | 'emoji'
    * | 'removeFormat' | 'sourceView' | 'theme' | 'undo' | 'redo'
    */
   features?: string[];

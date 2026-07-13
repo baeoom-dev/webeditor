@@ -6,10 +6,11 @@
  */
 
 // 통째로 제거(자식까지 삭제)해야 하는 위험 태그.
+// math 는 여기 없다 — MATHML_TAGS 화이트리스트 + 네임스페이스 격리로 별도 처리한다.
 export const DANGEROUS_TAGS = new Set([
   'script', 'style', 'iframe', 'object', 'embed', 'link', 'meta',
   'base', 'form', 'input', 'button', 'textarea', 'select', 'option',
-  'noscript', 'template', 'svg', 'math', 'title', 'head',
+  'noscript', 'template', 'svg', 'title', 'head',
 ]);
 
 // 허용 태그. 여기 없는 태그는 언랩(unwrap: 태그만 벗기고 자식은 보존)한다.
@@ -25,7 +26,24 @@ export const ALLOWED_TAGS = new Set([
   'font',
 ]);
 
+// MathML Core 허용 요소(수식 기능). ALLOWED_TAGS 와 분리해 감사를 쉽게 한다.
+// math 서브트리 안에서는 MathML 네임스페이스 + 이 목록의 요소만 허용되며,
+// 위반 요소는 unwrap 이 아니라 통째로 제거된다(sanitizer 의 네임스페이스 격리).
+//
+// 절대 추가하면 안 되는 것(mXSS 벡터):
+// - semantics / annotation / annotation-xml : HTML/XML 네임스페이스 전환 통로
+// - maction : 클릭 액션
+// - mglyph / malignmark : HTML 파서 breakout 벡터
+export const MATHML_TAGS = new Set([
+  'math', 'mrow', 'mi', 'mn', 'mo',
+  'mfrac', 'msqrt', 'mroot',
+  'msup', 'msub', 'msubsup', 'munder', 'mover', 'munderover',
+  'mtext', 'ms', 'mspace', 'mstyle', 'mpadded', 'mphantom', 'merror',
+  'mtable', 'mtr', 'mtd',
+]);
+
 // 태그별 허용 속성. 'style' 은 CSS 화이트리스트를 다시 통과한다.
+// 주의: MathML 요소의 href 는 링크로 동작하므로 어떤 MathML 태그에도 허용하지 말 것.
 export const ALLOWED_ATTRS = {
   '*': ['style', 'dir'],
   a: ['href', 'target', 'rel', 'title'],
@@ -35,6 +53,8 @@ export const ALLOWED_ATTRS = {
   col: ['span'],
   colgroup: ['span'],
   ol: ['start', 'type'],
+  // data-we-formula: 재편집용 원본 LaTeX 보존(features/formula.js).
+  math: ['display', 'data-we-formula'],
 };
 
 // 허용 CSS 속성. 엑셀 서식 보존을 위해 색/테두리/굵기/정렬을 포함한다.
