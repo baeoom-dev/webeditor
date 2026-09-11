@@ -6,6 +6,7 @@
  */
 import { Dialog } from '../ui/Dialog.js';
 import { icons } from '../ui/icons.js';
+import { iconButton, textButton, showError } from '../ui/form.js';
 import { ALLOWED_LINK_SCHEMES } from '../security/schema.js';
 
 /** href 스킴 검증. 상대경로는 허용. */
@@ -20,21 +21,26 @@ function isSafeHref(url) {
  * 링크 다이얼로그를 연다.
  * @param {object} ctx
  * @param {import('../core/Selection.js').SelectionManager} ctx.selection
+ * @param {(key: string, params?: object) => string} ctx.t i18n 조회
+ * @param {string} ctx.locale UI 언어
  * @param {() => void} ctx.onChange
  */
 export function openLinkDialog(ctx) {
+  const { t } = ctx;
   ctx.selection.save();
   const existing = ctx.selection.closest('a');
   const selectedText = getSelectedText(ctx.selection);
 
   const dialog = new Dialog({
-    title: existing ? '링크 편집' : '링크 삽입',
+    title: existing ? t('link.editTitle') : t('link.insertTitle'),
+    closeLabel: t('dialog.close'),
+    lang: ctx.locale,
     render: (body, close) => {
       const form = document.createElement('form');
       form.className = 'we-form';
 
-      const textField = field('표시 텍스트', 'text', existing ? existing.textContent : selectedText);
-      const urlField = field('링크 주소(URL)', 'url', existing ? existing.getAttribute('href') || '' : 'https://');
+      const textField = field(t('link.text'), 'text', existing ? existing.textContent : selectedText);
+      const urlField = field(t('link.url'), 'url', existing ? existing.getAttribute('href') || '' : 'https://');
       urlField.input.setAttribute('placeholder', 'https://example.com');
 
       const newTab = document.createElement('label');
@@ -42,7 +48,7 @@ export function openLinkDialog(ctx) {
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.checked = existing ? existing.getAttribute('target') === '_blank' : true;
-      newTab.append(cb, document.createTextNode(' 새 탭에서 열기'));
+      newTab.append(cb, document.createTextNode(` ${t('link.newTab')}`));
 
       const error = document.createElement('p');
       error.className = 'we-form-error';
@@ -52,7 +58,7 @@ export function openLinkDialog(ctx) {
       const actions = document.createElement('div');
       actions.className = 'we-form-actions';
       if (existing) {
-        const removeBtn = button('링크 제거', 'we-btn-ghost', () => {
+        const removeBtn = textButton(t('link.remove'), 'we-btn-ghost', () => {
           ctx.selection.restore();
           unwrapLink(existing);
           ctx.onChange();
@@ -60,9 +66,8 @@ export function openLinkDialog(ctx) {
         });
         actions.appendChild(removeBtn);
       }
-      const cancel = button('취소', 'we-btn-secondary', () => close());
-      const submit = button('적용', 'we-btn-primary', null, 'submit');
-      submit.innerHTML = `${icons.check}<span>적용</span>`;
+      const cancel = textButton(t('dialog.cancel'), 'we-btn-secondary', () => close());
+      const submit = iconButton({ icon: icons.check, text: t('dialog.apply'), className: 'we-btn-primary', type: 'submit' });
       actions.append(cancel, submit);
 
       form.append(textField.wrap, urlField.wrap, newTab, error, actions);
@@ -72,11 +77,11 @@ export function openLinkDialog(ctx) {
         const url = urlField.input.value.trim();
         const text = textField.input.value.trim() || url;
         if (!url) {
-          showError(error, '링크 주소를 입력하세요.');
+          showError(error, t('link.errorEmpty'));
           return;
         }
         if (!isSafeHref(url)) {
-          showError(error, '허용되지 않는 링크 형식입니다. (http, https, mailto, tel 만 가능)');
+          showError(error, t('link.errorScheme'));
           return;
         }
         ctx.selection.restore();
@@ -140,18 +145,4 @@ function field(labelText, type, value) {
   input.value = value || '';
   wrap.append(label, input);
   return { wrap, input };
-}
-
-function button(text, cls, onClick, type = 'button') {
-  const b = document.createElement('button');
-  b.type = type;
-  b.className = `we-btn ${cls}`;
-  b.textContent = text;
-  if (onClick) b.addEventListener('click', onClick);
-  return b;
-}
-
-function showError(el, msg) {
-  el.textContent = msg;
-  el.hidden = false;
 }

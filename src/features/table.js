@@ -6,6 +6,7 @@
  */
 import { Dialog } from '../ui/Dialog.js';
 import { icons } from '../ui/icons.js';
+import { iconButton, textButton } from '../ui/form.js';
 
 const MAX_ROWS = 20;
 const MAX_COLS = 10;
@@ -44,10 +45,13 @@ function buildTable(rows, cols, withHeader, caption) {
  * @param {object} ctx
  */
 export function openTableDialog(ctx) {
+  const { t } = ctx;
   ctx.selection.save();
 
   const dialog = new Dialog({
-    title: '표 삽입',
+    title: t('table.title'),
+    closeLabel: t('dialog.close'),
+    lang: ctx.locale,
     render: (body, close) => {
       const form = document.createElement('form');
       form.className = 'we-form';
@@ -58,39 +62,32 @@ export function openTableDialog(ctx) {
       preview.className = 'we-table-size';
       preview.setAttribute('aria-live', 'polite');
 
-      const rowsField = numberField('행', 2, MAX_ROWS, (v) => {
+      const rowsField = numberField(t('table.rows'), 2, MAX_ROWS, (v) => {
         state.rows = v;
         updatePreview();
       });
-      const colsField = numberField('열', 2, MAX_COLS, (v) => {
+      const colsField = numberField(t('table.cols'), 2, MAX_COLS, (v) => {
         state.cols = v;
         updatePreview();
       });
 
-      const captionField = textField('캡션(표 제목, 선택)', '예: 분기별 매출');
+      const captionField = textField(t('table.caption'), t('table.captionPlaceholder'));
 
       const headerLabel = document.createElement('label');
       headerLabel.className = 'we-checkbox';
       const headerCb = document.createElement('input');
       headerCb.type = 'checkbox';
       headerCb.checked = true;
-      headerLabel.append(headerCb, document.createTextNode(' 첫 행을 헤더로'));
+      headerLabel.append(headerCb, document.createTextNode(` ${t('table.headerRow')}`));
 
       const actions = document.createElement('div');
       actions.className = 'we-form-actions';
-      const cancel = document.createElement('button');
-      cancel.type = 'button';
-      cancel.className = 'we-btn we-btn-secondary';
-      cancel.textContent = '취소';
-      cancel.addEventListener('click', () => close());
-      const submit = document.createElement('button');
-      submit.type = 'submit';
-      submit.className = 'we-btn we-btn-primary';
-      submit.innerHTML = `${icons.check}<span>삽입</span>`;
+      const cancel = textButton(t('dialog.cancel'), 'we-btn-secondary', () => close());
+      const submit = iconButton({ icon: icons.check, text: t('dialog.insert'), className: 'we-btn-primary', type: 'submit' });
       actions.append(cancel, submit);
 
       function updatePreview() {
-        preview.textContent = `${state.rows} 행 × ${state.cols} 열`;
+        preview.textContent = t('table.preview', { rows: state.rows, cols: state.cols });
       }
       updatePreview();
 

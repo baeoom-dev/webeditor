@@ -10,6 +10,8 @@
  */
 export { Editor } from './core/Editor.js';
 export { sanitizeHtml } from './security/sanitizer.js';
+// 내장 UI 메시지 카탈로그(ko·en). 새 언어를 만들 때 복사해 출발점으로 쓰거나 부분 override 참고용.
+export { messages } from './i18n/createT.js';
 
 import { Editor } from './core/Editor.js';
 

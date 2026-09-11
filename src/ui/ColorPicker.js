@@ -16,10 +16,14 @@ export class ColorPicker {
   /**
    * @param {object} opts
    * @param {string} opts.label 접근성 라벨(예: "글자 색")
+   * @param {(key: string, params?: object) => string} opts.t i18n 조회 함수(color.* 키 사용)
+   * @param {string} [opts.lang] UI 언어 — body 직속 팝오버에 stamp
    * @param {(color: string) => void} opts.onSelect 선택 콜백
    */
-  constructor({ label, onSelect }) {
+  constructor({ label, t, locale, onSelect }) {
     this.label = label;
+    this.t = t;
+    this.lang = locale;
     this.onSelect = onSelect;
     this._popover = null;
     this._anchor = null;
@@ -34,6 +38,7 @@ export class ColorPicker {
     pop.className = 'we-color-popover';
     pop.setAttribute('role', 'dialog');
     pop.setAttribute('aria-label', this.label);
+    if (this.lang) pop.setAttribute('lang', this.lang);
 
     const grid = document.createElement('div');
     grid.className = 'we-color-grid';
@@ -62,14 +67,14 @@ export class ColorPicker {
     custom.className = 'we-color-custom';
     const input = document.createElement('input');
     input.type = 'color';
-    input.setAttribute('aria-label', `${this.label} 사용자 지정`);
+    input.setAttribute('aria-label', this.t('color.customFor', { label: this.label }));
     input.addEventListener('mousedown', (e) => e.preventDefault());
     input.addEventListener('input', () => {
       this._select(input.value);
     });
     input.addEventListener('change', () => this.close());
     const customLabel = document.createElement('span');
-    customLabel.textContent = '사용자 지정';
+    customLabel.textContent = this.t('color.custom');
     custom.append(input, customLabel);
 
     pop.append(grid, custom);

@@ -12,6 +12,7 @@
 import { icons } from '../ui/icons.js';
 import { ColorPicker } from '../ui/ColorPicker.js';
 import { Dialog } from '../ui/Dialog.js';
+import { iconButton, textButton } from '../ui/form.js';
 import {
   cellsInRect,
   closestCell,
@@ -31,10 +32,14 @@ export class TableToolbar {
    * @param {object} opts
    * @param {HTMLElement} opts.root contenteditable 편집 영역
    * @param {() => void} opts.onChange 변경 콜백
+   * @param {(key: string, params?: object) => string} opts.t i18n 조회 함수
+   * @param {string} [opts.locale] UI 언어 — body 직속 툴바/다이얼로그에 stamp
    */
-  constructor({ root, onChange }) {
+  constructor({ root, onChange, t, locale }) {
     this.root = root;
     this.onChange = onChange;
+    this.t = t;
+    this.lang = locale;
     this.el = null;
     this._buttons = [];
     this._pickers = [];
@@ -177,7 +182,9 @@ export class TableToolbar {
     const el = document.createElement('div');
     el.className = 'we-table-toolbar';
     el.setAttribute('role', 'toolbar');
-    el.setAttribute('aria-label', '표 편집 도구');
+    const t = this.t;
+    el.setAttribute('aria-label', t('tableEdit.label'));
+    if (this.lang) el.setAttribute('lang', this.lang);
     // 셀 선택 유지: 툴바 내부 mousedown 기본동작 차단.
     el.addEventListener('mousedown', (e) => {
       if (e.target.closest('input[type="color"]')) return;
@@ -186,29 +193,29 @@ export class TableToolbar {
 
     const groups = [
       [
-        ['rowInsertAbove', '위에 행 추가', () => this._op(insertRow, this._activeCell, 'above')],
-        ['rowInsertBelow', '아래에 행 추가', () => this._op(insertRow, this._activeCell, 'below')],
-        ['rowDelete', '행 삭제', () => this._op(deleteRow, this._activeCell)],
+        ['rowInsertAbove', t('tableEdit.rowInsertAbove'), () => this._op(insertRow, this._activeCell, 'above')],
+        ['rowInsertBelow', t('tableEdit.rowInsertBelow'), () => this._op(insertRow, this._activeCell, 'below')],
+        ['rowDelete', t('tableEdit.rowDelete'), () => this._op(deleteRow, this._activeCell)],
       ],
       [
-        ['colInsertLeft', '왼쪽에 열 추가', () => this._op(insertColumn, this._activeCell, 'left')],
-        ['colInsertRight', '오른쪽에 열 추가', () => this._op(insertColumn, this._activeCell, 'right')],
-        ['colDelete', '열 삭제', () => this._op(deleteColumn, this._activeCell)],
+        ['colInsertLeft', t('tableEdit.colInsertLeft'), () => this._op(insertColumn, this._activeCell, 'left')],
+        ['colInsertRight', t('tableEdit.colInsertRight'), () => this._op(insertColumn, this._activeCell, 'right')],
+        ['colDelete', t('tableEdit.colDelete'), () => this._op(deleteColumn, this._activeCell)],
       ],
       [
-        ['mergeCells', '셀 병합', () => this._merge()],
-        ['splitCell', '셀 분할', () => this._op(splitCell, this._activeCell)],
+        ['mergeCells', t('tableEdit.mergeCells'), () => this._merge()],
+        ['splitCell', t('tableEdit.splitCell'), () => this._op(splitCell, this._activeCell)],
       ],
       [
-        this._colorButton('bgColor', '셀 배경색', 'backgroundColor'),
-        this._colorButton('color', '셀 글자색', 'color'),
-        ['alignLeft', '왼쪽 정렬', () => this._align('left')],
-        ['alignCenter', '가운데 정렬', () => this._align('center')],
-        ['alignRight', '오른쪽 정렬', () => this._align('right')],
+        this._colorButton('bgColor', t('tableEdit.bgColor'), 'backgroundColor'),
+        this._colorButton('color', t('tableEdit.color'), 'color'),
+        ['alignLeft', t('align.left'), () => this._align('left')],
+        ['alignCenter', t('align.center'), () => this._align('center')],
+        ['alignRight', t('align.right'), () => this._align('right')],
       ],
       [
-        ['caption', '표 제목(캡션)', () => this._editCaption()],
-        ['trash', '표 삭제', () => this._deleteTable()],
+        ['caption', t('tableEdit.caption'), () => this._editCaption()],
+        ['trash', t('tableEdit.delete'), () => this._deleteTable()],
       ],
     ];
 
@@ -242,6 +249,8 @@ export class TableToolbar {
   _colorButton(iconName, label, prop) {
     const picker = new ColorPicker({
       label,
+      t: this.t,
+      locale: this.lang,
       onSelect: (color) => {
         styleCells(this._colorTargets, prop, color);
         this._afterOp(this._activeCell);
@@ -316,9 +325,12 @@ export class TableToolbar {
     if (!table) return;
     const existing = table.querySelector(':scope > caption');
     const current = existing ? existing.textContent : '';
+    const t = this.t;
 
     const dialog = new Dialog({
-      title: '표 제목(캡션)',
+      title: t('tableEdit.caption'),
+      closeLabel: t('dialog.close'),
+      lang: this.lang,
       render: (body, close) => {
         const form = document.createElement('form');
         form.className = 'we-form';
@@ -328,25 +340,18 @@ export class TableToolbar {
         const id = `we-tcap-${Math.random().toString(36).slice(2, 8)}`;
         const label = document.createElement('label');
         label.htmlFor = id;
-        label.textContent = '캡션 (비우면 삭제)';
+        label.textContent = t('tableEdit.captionLabel');
         const input = document.createElement('input');
         input.id = id;
         input.type = 'text';
         input.value = current;
-        input.placeholder = '예: 분기별 매출';
+        input.placeholder = t('table.captionPlaceholder');
         wrap.append(label, input);
 
         const actions = document.createElement('div');
         actions.className = 'we-form-actions';
-        const cancel = document.createElement('button');
-        cancel.type = 'button';
-        cancel.className = 'we-btn we-btn-secondary';
-        cancel.textContent = '취소';
-        cancel.addEventListener('click', () => close());
-        const submit = document.createElement('button');
-        submit.type = 'submit';
-        submit.className = 'we-btn we-btn-primary';
-        submit.innerHTML = `${icons.check}<span>적용</span>`;
+        const cancel = textButton(t('dialog.cancel'), 'we-btn-secondary', () => close());
+        const submit = iconButton({ icon: icons.check, text: t('dialog.apply'), className: 'we-btn-primary', type: 'submit' });
         actions.append(cancel, submit);
 
         form.append(wrap, actions);

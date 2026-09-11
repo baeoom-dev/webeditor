@@ -62,8 +62,15 @@
   <script type="module">
     import { createEditor } from './src/index.js';
 
+    // ?locale=en 으로 UI 언어를 바꿔 볼 수 있다(E2E i18n.spec.js 도 사용). 기본은 ko.
+    const params = new URLSearchParams(location.search);
+    const locale = params.get('locale') || 'ko';
+    const messages = params.get('override') === '1' ? { toolbar: { bold: 'Strong' } } : undefined;
+
     const editor = createEditor('#editor', {
-      placeholder: '여기에 내용을 입력하거나 엑셀 표를 붙여넣어 보세요…',
+      locale,
+      messages,
+      ...(locale === 'ko' ? { placeholder: '여기에 내용을 입력하거나 엑셀 표를 붙여넣어 보세요…' } : {}),
       initialHTML: '<p>안녕하세요 👋 <strong>굵게</strong>, <em>기울임</em>, ' +
         '<span style="color:#dc2626">색상</span> 을 시험해 보세요.</p>' +
         '<p>아래 표의 셀을 클릭하면 표 편집 도구가 나타납니다(행/열 추가·삭제, 셀 병합/분할, 배경·글자색·정렬). ' +

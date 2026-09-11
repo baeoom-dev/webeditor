@@ -123,13 +123,15 @@ git push --follow-tags   # 태그 푸시 → CI 가 빌드 + publish
 | `uploadImage` | — | `async (file) => url` 업로드 API |
 | `allowDataUrlFallback` | `true` | 업로드 핸들러 없을 때 data URL 사용 |
 | `maxImageSizeMB` | `10` | 이미지 최대 크기 |
-| `placeholder` | `'내용을 입력하세요…'` | 빈 상태 안내문 |
+| `placeholder` | 언어별 기본(ko `'내용을 입력하세요…'`) | 빈 상태 안내문 |
 | `initialHTML` | — | 초기 내용(새니타이즈됨) |
-| `ariaLabel` | `'본문 편집기'` | 편집 영역 접근성 라벨 |
+| `ariaLabel` | 언어별 기본(ko `'본문 편집기'`) | 편집 영역 접근성 라벨 |
 | `minHeight` | `240` | 최소 높이(px) |
 | `theme` | `'auto'` | 테마: `'auto'`(시스템 추종) / `'light'` / `'dark'` |
+| `locale` | `'ko'` | UI 언어 `'ko'` / `'en'` / 기타(→ `messages` 필요). [다국어](#다국어-ui-언어) 참고 |
+| `messages` | — | UI 문구 부분 override 또는 새 언어 전체 |
 | `fontSizes` | `['12px'…'32px']` | 글자 크기 목록 |
-| `fontFamilies` | 기본 7종 | 글꼴 목록 `[{ label, value }]` — value 는 CSS font-family 스택 |
+| `fontFamilies` | 기본 7종 | 글꼴 목록 `[{ label \| labelKey, value }]` — value 는 CSS font-family 스택 |
 | `features` | 전체 | 활성화할 기능 이름 배열 |
 | `onChange` | — | `(editor) => void` 변경 콜백 |
 
@@ -144,6 +146,8 @@ editor.getTheme();         // 현재 설정된 테마
 editor.toggleSource();     // HTML 소스보기 토글
 editor.focus();
 editor.destroy();          // DOM 제거 + 리스너 해제
+editor.locale;             // 해석된 UI 언어('ko' 등)
+editor.t('dialog.apply');  // 이 인스턴스의 메시지 조회(호스트 UI 와 문구를 맞출 때)
 ```
 
 ## 출력 페이지에 렌더링 (중요)
@@ -308,9 +312,52 @@ editor.getTheme();
 > 참고: `html[data-we-theme]` 는 페이지 전역이므로, 한 페이지에 에디터가 여러 개면
 > 팝오버 테마는 마지막으로 설정한 값을 공유한다(편집 영역 색은 인스턴스별로 유지).
 
+## 다국어 (UI 언어)
+
+툴바·다이얼로그·오류 문구 등 **에디터 UI 문자열**의 언어를 `locale` 로 정한다. 기본은 `'ko'`,
+내장은 `ko`·`en`. 본문(콘텐츠)은 사용자 데이터라 UI 언어와 무관하다.
+
+```js
+// ESM
+const editor = createEditor('#editor', { locale: 'en' });
+
+// IIFE
+var editor = WebEditor.createEditor('#editor', { locale: 'en' });
+```
+
+- 언어는 **호스트가 명시**한다(브라우저 언어 자동 감지 없음 — 페이지 UI 와 어긋나지 않게).
+  생성자 옵션이라 언어를 바꾸려면 에디터를 다시 만든다.
+- `placeholder`·`ariaLabel` 을 넘기지 않으면 해당 언어의 기본 문구가 쓰인다.
+- 컨테이너(`.we-editor`)와 다이얼로그·팝오버·표 툴바에 `lang` 이 stamp 돼 스크린리더가 올바른 언어로 읽는다.
+
+**문구 일부만 바꾸기** — 호스트 용어집에 맞출 때. 내장 카탈로그 위에 깊은 병합된다.
+
+```js
+createEditor('#editor', {
+  locale: 'en',
+  messages: { toolbar: { bold: 'Strong' }, dialog: { apply: 'Save' } },
+});
+```
+
+**새 언어 추가** — 내장에 없는 `locale` 은 `messages` → `ko` 순으로 폴백하므로, 내장 카탈로그를
+복사해 번역한 객체를 통째로 넘긴다. 키 목록은 `messages.ko`(export) 또는 `EditorMessages` 타입 참고.
+
+```js
+import { createEditor, messages } from '@baeoom-dev/webeditor';
+const ja = { ...structuredClone(messages.ko), dialog: { ...messages.ko.dialog, cancel: 'キャンセル' } };
+createEditor('#editor', { locale: 'ja', messages: ja });
+```
+
+- 보간은 `{name}` 만 지원한다(`table.preview: '{rows} rows × {cols} columns'`). 파라미터가 아닌
+  `{…}` 는 그대로 남는다.
+- 문구는 `textContent` 로만 삽입되므로 `messages` 에 마크업을 넣어도 렌더되지 않는다(XSS 방지).
+- 호스트 `uploadImage` 가 던진 오류 메시지는 번역하지 않고 그대로 보여준다(호스트가 이미 자기 언어로 만든 문구).
+- 글꼴 목록을 직접 넘길 때 내장 문구를 쓰려면 `labelKey: 'font.default'` 처럼 카탈로그 키를 준다.
+
 ## 웹접근성
 
 - 툴바(메인·표 컨텍스트 모두): `role="toolbar"` + roving tabindex(방향키 이동), 토글 버튼 `aria-pressed`
+- UI 언어를 컨테이너·다이얼로그·팝오버에 `lang` 으로 노출(스크린리더 발음 언어)
 - 편집 영역: `role="textbox"`, `aria-multiline`, `aria-label`
 - 다이얼로그: `role="dialog"` + `aria-modal`, 포커스 트랩, `Esc` 닫기, 포커스 복원
 - 색상/이모지 팝오버: `role="grid"` + 방향키 이동

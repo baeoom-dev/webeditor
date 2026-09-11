@@ -20,6 +20,8 @@ pnpm install
 pnpm build     # esbuild 로 dist/ 에 esm/iife/css/d.ts 생성 (scripts/build.mjs)
 pnpm dev       # python3 -m http.server 8791 — index.html 데모를 브라우저로 확인
 pnpm test:e2e  # Playwright E2E (시스템 Chrome, tests/e2e/) — 서버 자동 기동
+pnpm test:unit # node --test — i18n 카탈로그 키 일치·createT 폴백/보간 (의존성 없음)
+pnpm lint:i18n # src/ 에 한글 UI 리터럴이 남아 있으면 실패 (카탈로그로 옮길 것)
 ```
 
 - **E2E**: `tests/e2e/` 의 Playwright 스펙이 데모(index.html)를 실제 Chrome(`channel: 'chrome'`,
@@ -46,6 +48,8 @@ src/
 │                       table-edit.js — 표 컨텍스트 툴바(셀 안 커서 시 표시)
 │                       table-ops.js — colspan/rowspan 인지 순수 DOM 그리드 연산
 ├── ui/                 Toolbar · Dialog · ColorPicker · EmojiPicker · icons(인라인 SVG)
+│                       form.js — 다이얼로그 버튼 헬퍼(아이콘 innerHTML + 문구 textContent 분리)
+├── i18n/               ko.js(키 SSOT) · en.js · createT.js(조회·폴백·보간) — UI 문구 카탈로그
 ├── clipboard/paste.js  붙여넣기 처리 (이미지/엑셀 HTML/순수 텍스트 분기)
 └── styles/editor.css   전체 스타일 (클래스 프리픽스 `we-`)
 ```
@@ -64,6 +68,10 @@ src/
 
 3. **허용 정책 변경은 오직 `src/security/schema.js` 에서만 한다.** 태그/속성/CSS 속성/URL
    스킴을 추가·제거할 때 다른 파일에 흩뿌리지 말 것 — 감사(audit) 가능성을 위해 한 곳에 모은다.
+
+4. **UI 문구(i18n 카탈로그·호스트 `messages`)는 `textContent`/`setAttribute` 로만 DOM 에 넣는다.
+   `innerHTML` 금지.** 문구는 호스트 입력(`messages` 옵션)이 될 수 있으므로 아이콘 SVG 와 문자열로
+   합치지 말 것 — 아이콘은 `innerHTML`, 문구는 `<span>` 에 `textContent`(`ui/form.js` 의 `iconButton`).
 
 ### 서식 명령이 `execCommand` 를 쓰는 이유
 
@@ -119,6 +127,21 @@ schema 화이트리스트로 남긴다. `align`/`bgcolor` 같은 레거시 속�
 - 변환기는 `createElementNS` 로 DOM 을 직접 생성한다(문자열 조립 금지). 새 명령을 추가할 때
   새 MathML 요소가 필요하면 먼저 `MATHML_TAGS` 에 등록해야 sanitize 왕복에서 살아남는다.
 - 상세 설계: `docs/formula-design.md`
+
+### 다국어(UI 언어) — `src/i18n/`
+
+- 에디터 UI 문구는 전부 `src/i18n/ko.js`(키 SSOT)·`en.js` 카탈로그에 있다. **소스에 한글 UI 리터럴을
+  쓰지 말 것** — `pnpm lint:i18n`(`scripts/check-i18n.mjs`)이 잡는다. 키를 추가하면 `en.js` 에도 넣어야
+  `pnpm test:unit` 의 키 일치 검사를 통과한다. 새 문구는 `this.t('ns.key')` / `ctx.t(...)` 로 조회.
+- `t` 는 **인스턴스 스코프**다(`Editor` 생성자에서 `createT` → `_ctx()`·UI 클래스 생성자로 전달).
+  전역 싱글턴에 두지 말 것 — 한 페이지에 언어가 다른 인스턴스가 공존할 수 있다. 테마가 전역인 것과 다르다.
+- 조회 순서: 호스트 `messages` → 내장 `locale` → `ko` → 키 문자열(+`console.warn` 1회). 보간은 `{name}`
+  만이고 params 에 없는 `{…}` 는 보존한다(LaTeX 오류 문구의 중괄호 때문).
+- `math/latex-to-mathml.js` 는 i18n 을 모른다: 문구 대신 `LatexSyntaxError(code, params)` 를 던지고
+  `features/formula.js` 가 `latex.<code>` 키로 번역한다. 새 오류를 추가하면 코드를 `ko.js`/`en.js` 의
+  `latex.*` 에 등록할 것(단위 테스트가 검사).
+- body 직속 UI(다이얼로그·팝오버·표 툴바)는 `.we-editor[lang]` 밖이므로 각 클래스가 `lang` 을 직접 stamp 한다.
+  새 body 직속 UI 를 추가하면 `locale` 을 받아 `lang` 을 stamp 할 것. 설계: `docs/i18n-plan.md`.
 
 ### 테마(라이트/다크)
 

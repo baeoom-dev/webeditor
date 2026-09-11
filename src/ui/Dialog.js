@@ -14,10 +14,14 @@ export class Dialog {
   /**
    * @param {object} opts
    * @param {string} opts.title 다이얼로그 제목
+   * @param {string} opts.closeLabel 닫기 버튼 접근성 라벨(i18n: dialog.close)
+   * @param {string} [opts.lang] UI 언어 — body 직속이라 .we-editor[lang] 밖이므로 직접 stamp
    * @param {(body: HTMLElement, close: () => void) => void} opts.render 본문 렌더러
    */
-  constructor({ title, render }) {
+  constructor({ title, closeLabel, lang, render }) {
     this.title = title;
+    this.closeLabel = closeLabel;
+    this.lang = lang;
     this.render = render;
     this._previousFocus = null;
     this._onKeydown = this._onKeydown.bind(this);
@@ -33,6 +37,7 @@ export class Dialog {
     dialog.className = 'we-dialog';
     dialog.setAttribute('role', 'dialog');
     dialog.setAttribute('aria-modal', 'true');
+    if (this.lang) dialog.setAttribute('lang', this.lang);
 
     const titleId = `we-dialog-title-${Math.random().toString(36).slice(2, 8)}`;
     dialog.setAttribute('aria-labelledby', titleId);
@@ -46,7 +51,7 @@ export class Dialog {
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
     closeBtn.className = 'we-dialog-close';
-    closeBtn.setAttribute('aria-label', '닫기');
+    closeBtn.setAttribute('aria-label', this.closeLabel);
     closeBtn.innerHTML = icons.close;
     closeBtn.addEventListener('click', () => this.close());
     header.append(h, closeBtn);

@@ -9,6 +9,7 @@
  */
 import { Dialog } from '../ui/Dialog.js';
 import { icons } from '../ui/icons.js';
+import { iconButton, textButton, showError } from '../ui/form.js';
 import { ALLOWED_IMG_SCHEMES, ALLOWED_DATA_MIME } from '../security/schema.js';
 
 /** img src 스킴 검증. */
@@ -23,11 +24,11 @@ function isSafeSrc(url) {
 }
 
 /** File 을 data URL 로 읽는다(폴백). */
-function readAsDataUrl(file) {
+function readAsDataUrl(file, t) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(reader.error || new Error('파일을 읽지 못했습니다.'));
+    reader.onerror = () => reject(reader.error || new Error(t('image.errorRead')));
     reader.readAsDataURL(file);
   });
 }
@@ -49,30 +50,33 @@ function insertImage(src, alt, ctx) {
  * @returns {Promise<void>}
  */
 export async function insertImageFile(file, ctx) {
-  validateImageFile(file, ctx.config);
+  const { t } = ctx;
+  validateImageFile(file, ctx.config, t);
   let src;
   if (typeof ctx.config.uploadImage === 'function') {
+    // 호스트 uploadImage 가 던진 오류 메시지는 번역하지 않고 그대로 전파한다(호스트 언어).
     src = await ctx.config.uploadImage(file);
     if (typeof src !== 'string' || !src) {
-      throw new Error('업로드 API 가 유효한 URL 을 반환하지 않았습니다.');
+      throw new Error(t('image.errorUploadUrl'));
     }
   } else if (ctx.config.allowDataUrlFallback !== false) {
-    src = await readAsDataUrl(file);
+    src = await readAsDataUrl(file, t);
   } else {
-    throw new Error('이미지 업로드 핸들러(uploadImage)가 설정되지 않았습니다.');
+    throw new Error(t('image.errorNoUploader'));
   }
   ctx.selection.restore();
   insertImage(src, file.name.replace(/\.[^.]+$/, ''), ctx);
 }
 
 /** 업로드 전 파일 크기/형식 검증. */
-function validateImageFile(file, config) {
-  const maxBytes = (config.maxImageSizeMB ?? 10) * 1024 * 1024;
+function validateImageFile(file, config, t) {
+  const maxMB = config.maxImageSizeMB ?? 10;
+  const maxBytes = maxMB * 1024 * 1024;
   if (!file.type.startsWith('image/')) {
-    throw new Error('이미지 파일만 첨부할 수 있습니다.');
+    throw new Error(t('image.errorType'));
   }
   if (file.size > maxBytes) {
-    throw new Error(`이미지 크기는 최대 ${config.maxImageSizeMB ?? 10}MB 까지 가능합니다.`);
+    throw new Error(t('image.errorSize', { max: maxMB }));
   }
 }
 
@@ -81,20 +85,27 @@ function validateImageFile(file, config) {
  * @param {object} ctx
  */
 export function openImageDialog(ctx) {
+  const { t } = ctx;
   ctx.selection.save();
 
   const dialog = new Dialog({
-    title: '이미지 첨부',
+    title: t('image.title'),
+    closeLabel: t('dialog.close'),
+    lang: ctx.locale,
     render: (body, close) => {
       const form = document.createElement('form');
       form.className = 'we-form';
 
-      // 파일 업로드 영역.
+      // 파일 업로드 영역. 아이콘만 innerHTML, 안내 문구는 textContent.
       const drop = document.createElement('div');
       drop.className = 'we-image-drop';
-      drop.innerHTML =
-        `<div class="we-image-drop-inner">${icons.image}` +
-        `<p>파일을 선택하거나 여기로 끌어다 놓으세요</p></div>`;
+      const dropInner = document.createElement('div');
+      dropInner.className = 'we-image-drop-inner';
+      dropInner.innerHTML = icons.image;
+      const dropHint = document.createElement('p');
+      dropHint.textContent = t('image.dropHint');
+      dropInner.appendChild(dropHint);
+      drop.appendChild(dropInner);
       const fileInput = document.createElement('input');
       fileInput.type = 'file';
       fileInput.accept = 'image/*';
@@ -103,7 +114,7 @@ export function openImageDialog(ctx) {
       const fileLabel = document.createElement('label');
       fileLabel.className = 'we-btn we-btn-secondary';
       fileLabel.htmlFor = fileInput.id;
-      fileLabel.textContent = '파일 선택';
+      fileLabel.textContent = t('image.chooseFile');
 
       const error = document.createElement('p');
       error.className = 'we-form-error';
@@ -117,7 +128,7 @@ export function openImageDialog(ctx) {
           await insertImageFile(file, ctx);
           close();
         } catch (err) {
-          showError(error, err instanceof Error ? err.message : '이미지 처리 중 오류가 발생했습니다.');
+          showError(error, err instanceof Error ? err.message : t('image.errorProcess'));
         }
       };
 
@@ -139,7 +150,7 @@ export function openImageDialog(ctx) {
       const urlId = `we-url-${Math.random().toString(36).slice(2, 8)}`;
       const urlLabel = document.createElement('label');
       urlLabel.htmlFor = urlId;
-      urlLabel.textContent = '또는 이미지 URL';
+      urlLabel.textContent = t('image.orUrl');
       const urlInput = document.createElement('input');
       urlInput.id = urlId;
       urlInput.type = 'url';
@@ -151,24 +162,17 @@ export function openImageDialog(ctx) {
       const altId = `we-alt-${Math.random().toString(36).slice(2, 8)}`;
       const altLabel = document.createElement('label');
       altLabel.htmlFor = altId;
-      altLabel.textContent = '대체 텍스트(웹접근성 권장)';
+      altLabel.textContent = t('image.alt');
       const altInput = document.createElement('input');
       altInput.id = altId;
       altInput.type = 'text';
-      altInput.placeholder = '이미지 설명';
+      altInput.placeholder = t('image.altPlaceholder');
       altWrap.append(altLabel, altInput);
 
       const actions = document.createElement('div');
       actions.className = 'we-form-actions';
-      const cancel = document.createElement('button');
-      cancel.type = 'button';
-      cancel.className = 'we-btn we-btn-secondary';
-      cancel.textContent = '취소';
-      cancel.addEventListener('click', () => close());
-      const submit = document.createElement('button');
-      submit.type = 'submit';
-      submit.className = 'we-btn we-btn-primary';
-      submit.innerHTML = `${icons.check}<span>URL 삽입</span>`;
+      const cancel = textButton(t('dialog.cancel'), 'we-btn-secondary', () => close());
+      const submit = iconButton({ icon: icons.check, text: t('image.insertUrl'), className: 'we-btn-primary', type: 'submit' });
       actions.append(cancel, submit);
 
       form.append(drop, fileLabel, fileInput, urlWrap, altWrap, error, actions);
@@ -177,11 +181,11 @@ export function openImageDialog(ctx) {
         e.preventDefault();
         const url = urlInput.value.trim();
         if (!url) {
-          showError(error, '이미지 URL 을 입력하거나 파일을 선택하세요.');
+          showError(error, t('image.errorEmpty'));
           return;
         }
         if (!isSafeSrc(url)) {
-          showError(error, '허용되지 않는 이미지 URL 형식입니다.');
+          showError(error, t('image.errorScheme'));
           return;
         }
         ctx.selection.restore();
@@ -201,8 +205,11 @@ export function openImageDialog(ctx) {
  * @param {object} ctx onChange 등을 포함한 컨텍스트
  */
 export function openImageAltDialog(img, ctx) {
+  const { t } = ctx;
   const dialog = new Dialog({
-    title: '이미지 대체 텍스트',
+    title: t('image.altTitle'),
+    closeLabel: t('dialog.close'),
+    lang: ctx.locale,
     render: (body, close) => {
       const form = document.createElement('form');
       form.className = 'we-form';
@@ -212,25 +219,18 @@ export function openImageAltDialog(img, ctx) {
       const id = `we-editalt-${Math.random().toString(36).slice(2, 8)}`;
       const label = document.createElement('label');
       label.htmlFor = id;
-      label.textContent = '대체 텍스트(alt) — 웹접근성 권장';
+      label.textContent = t('image.altLabelLong');
       const input = document.createElement('input');
       input.id = id;
       input.type = 'text';
       input.value = img.getAttribute('alt') || '';
-      input.placeholder = '이미지 설명';
+      input.placeholder = t('image.altPlaceholder');
       wrap.append(label, input);
 
       const actions = document.createElement('div');
       actions.className = 'we-form-actions';
-      const cancel = document.createElement('button');
-      cancel.type = 'button';
-      cancel.className = 'we-btn we-btn-secondary';
-      cancel.textContent = '취소';
-      cancel.addEventListener('click', () => close());
-      const submit = document.createElement('button');
-      submit.type = 'submit';
-      submit.className = 'we-btn we-btn-primary';
-      submit.innerHTML = `${icons.check}<span>적용</span>`;
+      const cancel = textButton(t('dialog.cancel'), 'we-btn-secondary', () => close());
+      const submit = iconButton({ icon: icons.check, text: t('dialog.apply'), className: 'we-btn-primary', type: 'submit' });
       actions.append(cancel, submit);
 
       form.append(wrap, actions);
@@ -244,9 +244,4 @@ export function openImageAltDialog(img, ctx) {
     },
   });
   dialog.open();
-}
-
-function showError(el, msg) {
-  el.textContent = msg;
-  el.hidden = false;
 }

@@ -20,7 +20,8 @@ export class Toolbar {
     this.el = document.createElement('div');
     this.el.className = 'we-toolbar';
     this.el.setAttribute('role', 'toolbar');
-    this.el.setAttribute('aria-label', label || '서식 도구 모음');
+    // 라벨은 Editor 가 i18n 카탈로그(toolbar.label)에서 넘긴다.
+    this.el.setAttribute('aria-label', label);
     this.el.setAttribute('aria-controls', ''); // Editor 가 채운다
     this._buttons = [];
     this._build();

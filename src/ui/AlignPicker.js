@@ -9,20 +9,25 @@
  */
 import { icons } from './icons.js';
 
+// labelKey 는 i18n 카탈로그(align.*) 키. 표 툴바의 정렬 버튼도 같은 키를 쓴다.
 export const ALIGN_OPTIONS = [
-  { name: 'alignLeft', label: '왼쪽 정렬', queryName: 'justifyLeft' },
-  { name: 'alignCenter', label: '가운데 정렬', queryName: 'justifyCenter' },
-  { name: 'alignRight', label: '오른쪽 정렬', queryName: 'justifyRight' },
-  { name: 'alignJustify', label: '양쪽 정렬', queryName: 'justifyFull' },
+  { name: 'alignLeft', labelKey: 'align.left', queryName: 'justifyLeft' },
+  { name: 'alignCenter', labelKey: 'align.center', queryName: 'justifyCenter' },
+  { name: 'alignRight', labelKey: 'align.right', queryName: 'justifyRight' },
+  { name: 'alignJustify', labelKey: 'align.justify', queryName: 'justifyFull' },
 ];
 
 export class AlignPicker {
   /**
    * @param {object} opts
+   * @param {(key: string) => string} opts.t i18n 조회 함수
+   * @param {string} [opts.locale] UI 언어 — body 직속 팝오버에 stamp
    * @param {(name: string) => void} opts.onSelect 선택 콜백(정렬 아이콘 이름 전달)
    * @param {() => string} opts.getCurrent 현재 정렬 아이콘 이름 반환(aria-checked 표시용)
    */
-  constructor({ onSelect, getCurrent }) {
+  constructor({ t, locale, onSelect, getCurrent }) {
+    this.t = t;
+    this.lang = locale;
     this.onSelect = onSelect;
     this.getCurrent = getCurrent;
     this._popover = null;
@@ -37,7 +42,8 @@ export class AlignPicker {
     const pop = document.createElement('div');
     pop.className = 'we-align-popover';
     pop.setAttribute('role', 'menu');
-    pop.setAttribute('aria-label', '정렬');
+    pop.setAttribute('aria-label', this.t('align.label'));
+    if (this.lang) pop.setAttribute('lang', this.lang);
 
     const current = this.getCurrent ? this.getCurrent() : '';
     const items = [];
@@ -47,7 +53,11 @@ export class AlignPicker {
       item.className = 'we-align-option';
       item.setAttribute('role', 'menuitemradio');
       item.setAttribute('aria-checked', opt.name === current ? 'true' : 'false');
-      item.innerHTML = `${icons[opt.name]}<span>${opt.label}</span>`;
+      // 아이콘(신뢰된 인라인 SVG)은 innerHTML, 문구는 textContent — 메시지 문자열을 innerHTML 에 넣지 않는다.
+      item.innerHTML = icons[opt.name];
+      const text = document.createElement('span');
+      text.textContent = this.t(opt.labelKey);
+      item.appendChild(text);
       item.tabIndex = -1;
       // 선택 유지: mousedown 기본동작(포커스 이동) 차단.
       item.addEventListener('mousedown', (e) => e.preventDefault());

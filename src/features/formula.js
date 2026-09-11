@@ -8,9 +8,16 @@
  */
 import { Dialog } from '../ui/Dialog.js';
 import { icons } from '../ui/icons.js';
-import { latexToMathML } from '../math/latex-to-mathml.js';
+import { iconButton, textButton } from '../ui/form.js';
+import { latexToMathML, LatexSyntaxError } from '../math/latex-to-mathml.js';
 
 const EXAMPLE = '\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}';
+
+/** 변환기 오류(코드+파라미터)를 현재 UI 언어 문구로 바꾼다. 변환기는 i18n 을 모른다. */
+function describeError(err, t) {
+  if (err instanceof LatexSyntaxError) return t(`latex.${err.code}`, err.params);
+  return t('formula.errorParse');
+}
 
 /**
  * Backspace/Delete 로 커서에 인접한 수식(원자)을 삭제한다.
@@ -82,12 +89,15 @@ function skipEmptyText(node, prev) {
  * @param {Element|null} [existing] 재편집할 기존 <math> 요소(더블클릭 진입)
  */
 export function openFormulaDialog(ctx, existing = null) {
+  const { t } = ctx;
   ctx.selection.save();
   const initialLatex = existing ? existing.getAttribute('data-we-formula') || '' : '';
   const initialBlock = existing ? existing.getAttribute('display') === 'block' : false;
 
   const dialog = new Dialog({
-    title: existing ? '수식 편집' : '수식 삽입',
+    title: existing ? t('formula.editTitle') : t('formula.insertTitle'),
+    closeLabel: t('dialog.close'),
+    lang: ctx.locale,
     render: (body, close) => {
       const form = document.createElement('form');
       form.className = 'we-form';
@@ -98,12 +108,12 @@ export function openFormulaDialog(ctx, existing = null) {
       const id = `we-f-${Math.random().toString(36).slice(2, 8)}`;
       const label = document.createElement('label');
       label.htmlFor = id;
-      label.textContent = '수식 (LaTeX)';
+      label.textContent = t('formula.label');
       const input = document.createElement('textarea');
       input.id = id;
       input.className = 'we-formula-input';
       input.rows = 3;
-      input.setAttribute('placeholder', `예: ${EXAMPLE}`);
+      input.setAttribute('placeholder', t('formula.placeholder', { example: EXAMPLE }));
       input.setAttribute('spellcheck', 'false');
       input.value = initialLatex;
       field.append(label, input);
@@ -113,7 +123,7 @@ export function openFormulaDialog(ctx, existing = null) {
       previewWrap.className = 'we-field';
       const previewLabel = document.createElement('span');
       previewLabel.className = 'we-field-caption';
-      previewLabel.textContent = '미리보기';
+      previewLabel.textContent = t('formula.preview');
       const preview = document.createElement('div');
       preview.className = 'we-formula-preview we-content';
       preview.setAttribute('aria-live', 'polite');
@@ -125,7 +135,7 @@ export function openFormulaDialog(ctx, existing = null) {
       const blockCb = document.createElement('input');
       blockCb.type = 'checkbox';
       blockCb.checked = initialBlock;
-      blockLabel.append(blockCb, document.createTextNode(' 블록 수식(별도 줄, 가운데 표시)'));
+      blockLabel.append(blockCb, document.createTextNode(` ${t('formula.block')}`));
 
       const error = document.createElement('p');
       error.className = 'we-form-error';
@@ -145,7 +155,7 @@ export function openFormulaDialog(ctx, existing = null) {
           preview.dataset.empty = 'false';
         } catch (err) {
           preview.dataset.empty = 'true';
-          error.textContent = err instanceof Error ? err.message : '수식을 해석할 수 없습니다.';
+          error.textContent = describeError(err, t);
           error.hidden = false;
         }
       };
@@ -156,26 +166,15 @@ export function openFormulaDialog(ctx, existing = null) {
       const actions = document.createElement('div');
       actions.className = 'we-form-actions';
       if (existing) {
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'we-btn we-btn-ghost';
-        removeBtn.textContent = '수식 삭제';
-        removeBtn.addEventListener('click', () => {
+        const removeBtn = textButton(t('formula.remove'), 'we-btn-ghost', () => {
           existing.remove();
           ctx.onChange();
           close();
         });
         actions.appendChild(removeBtn);
       }
-      const cancel = document.createElement('button');
-      cancel.type = 'button';
-      cancel.className = 'we-btn we-btn-secondary';
-      cancel.textContent = '취소';
-      cancel.addEventListener('click', () => close());
-      const submit = document.createElement('button');
-      submit.type = 'submit';
-      submit.className = 'we-btn we-btn-primary';
-      submit.innerHTML = `${icons.check}<span>적용</span>`;
+      const cancel = textButton(t('dialog.cancel'), 'we-btn-secondary', () => close());
+      const submit = iconButton({ icon: icons.check, text: t('dialog.apply'), className: 'we-btn-primary', type: 'submit' });
       actions.append(cancel, submit);
 
       form.append(field, previewWrap, blockLabel, error, actions);
@@ -186,7 +185,7 @@ export function openFormulaDialog(ctx, existing = null) {
         try {
           math = latexToMathML(input.value, { display: blockCb.checked });
         } catch (err) {
-          error.textContent = err instanceof Error ? err.message : '수식을 해석할 수 없습니다.';
+          error.textContent = describeError(err, t);
           error.hidden = false;
           input.focus();
           return;

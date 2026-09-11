@@ -82,6 +82,24 @@ const DELIM_COMMANDS = { '{': '{', '}': '}', langle: '⟨', rangle: '⟩', '|': 
 // 낱글자 연산자 문자.
 const OP_CHARS = new Set('+-*/=<>()[]|,.;:!?');
 
+/**
+ * 변환 실패 오류. 이 모듈은 i18n 을 모르므로 사람이 읽을 문구 대신 **코드 + 파라미터**만 던진다.
+ * 호출부(features/formula.js)가 `latex.<code>` 키와 params 로 현재 UI 언어 문구를 만든다.
+ * 코드 목록은 src/i18n/ko.js 의 `latex.*` 키와 1:1 이다.
+ */
+export class LatexSyntaxError extends Error {
+  /**
+   * @param {string} code i18n 키(latex.* 의 하위 키)
+   * @param {Record<string, string>} [params] 보간 파라미터
+   */
+  constructor(code, params = {}) {
+    super(code);
+    this.name = 'LatexSyntaxError';
+    this.code = code;
+    this.params = params;
+  }
+}
+
 /* ---------- 토크나이저 ---------- */
 
 /**
@@ -96,7 +114,7 @@ const OP_CHARS = new Set('+-*/=<>()[]|,.;:!?');
 function readTextGroup(src, start) {
   let i = start;
   while (i < src.length && /\s/.test(src[i])) i += 1;
-  if (src[i] !== '{') throw new Error('\\text 는 {내용} 이 필요합니다.');
+  if (src[i] !== '{') throw new LatexSyntaxError('textNeedsBrace');
   let depth = 1;
   let j = i + 1;
   while (j < src.length && depth > 0) {
@@ -104,7 +122,7 @@ function readTextGroup(src, start) {
     else if (src[j] === '}') depth -= 1;
     j += 1;
   }
-  if (depth !== 0) throw new Error('\\text 의 닫는 } 가 없습니다.');
+  if (depth !== 0) throw new LatexSyntaxError('textUnclosed');
   return { raw: src.slice(i + 1, j - 1), end: j };
 }
 
@@ -133,7 +151,7 @@ function tokenize(latex) {
         tokens.push({ type: 'cmd', value: rest[0] });
         i += 2;
       } else {
-        throw new Error('수식이 \\ 로 끝났습니다.');
+        throw new LatexSyntaxError('trailingBackslash');
       }
       continue;
     }
@@ -208,10 +226,10 @@ class Parser {
         this.next();
         const script = asOne([this.parseArg()]);
         if (t.value === '^') {
-          if (sup) throw new Error('^ 첨자가 중복되었습니다.');
+          if (sup) throw new LatexSyntaxError('duplicateSup');
           sup = script;
         } else {
-          if (sub) throw new Error('_ 첨자가 중복되었습니다.');
+          if (sub) throw new LatexSyntaxError('duplicateSub');
           sub = script;
         }
         continue;
@@ -223,7 +241,7 @@ class Parser {
           this.next();
           primes += '′';
         }
-        if (sup) throw new Error("' 와 ^ 첨자를 함께 쓸 수 없습니다.");
+        if (sup) throw new LatexSyntaxError('primeWithSup');
         sup = el('mo', primes);
         continue;
       }
@@ -241,7 +259,7 @@ class Parser {
   /** 명령 인자: {그룹} 또는 원자 하나 (\frac12 형태 허용). */
   parseArg() {
     const t = this.peek();
-    if (!t) throw new Error('명령의 인자가 없습니다.');
+    if (!t) throw new LatexSyntaxError('missingArgument');
     if (t.type === 'brace' && t.value === '{') return this.parseGroup();
     return this.parseAtom();
   }
@@ -250,12 +268,12 @@ class Parser {
   parseGroup() {
     const open = this.next();
     if (!open || open.type !== 'brace' || open.value !== '{') {
-      throw new Error('{ 가 필요합니다.');
+      throw new LatexSyntaxError('expectedOpenBrace');
     }
     const nodes = this.parseSequence();
     const close = this.next();
     if (!close || close.type !== 'brace' || close.value !== '}') {
-      throw new Error('닫는 } 가 없습니다.');
+      throw new LatexSyntaxError('unclosedBrace');
     }
     return asOne(nodes.length ? nodes : [el('mrow')]);
   }
@@ -263,7 +281,7 @@ class Parser {
   /** 원자 하나를 파싱한다. */
   parseAtom() {
     const t = this.next();
-    if (!t) throw new Error('수식이 예기치 않게 끝났습니다.');
+    if (!t) throw new LatexSyntaxError('unexpectedEnd');
 
     switch (t.type) {
       case 'num': return el('mn', t.value);
@@ -272,12 +290,12 @@ class Parser {
       case 'text': return el('mtext', t.value);
       case 'brace':
         if (t.value === '{') { this.pos -= 1; return this.parseGroup(); }
-        throw new Error('짝이 없는 } 가 있습니다.');
+        throw new LatexSyntaxError('unmatchedCloseBrace');
       case 'script':
-        throw new Error(`${t.value} 앞에 대상이 없습니다.`);
+        throw new LatexSyntaxError('noBase', { token: t.value });
       case 'cmd': return this.parseCommand(t.value);
       default:
-        throw new Error('알 수 없는 토큰입니다.');
+        throw new LatexSyntaxError('unknownToken');
     }
   }
 
@@ -295,13 +313,13 @@ class Parser {
         this.next();
         const index = asOne(this.parseSequence((tk) => tk.type === 'op' && tk.value === ']'));
         const close = this.next();
-        if (!close || close.value !== ']') throw new Error('\\sqrt 의 닫는 ] 가 없습니다.');
+        if (!close || close.value !== ']') throw new LatexSyntaxError('sqrtUnclosedBracket');
         return el('mroot', null, [asOne([this.parseArg()]), index]);
       }
       return el('msqrt', null, [asOne([this.parseArg()])]);
     }
     if (name === 'left') return this.parseFenced();
-    if (name === 'right') throw new Error('\\left 없이 \\right 가 나왔습니다.');
+    if (name === 'right') throw new LatexSyntaxError('rightWithoutLeft');
 
     if (GREEK[name]) return el('mi', GREEK[name]);
     if (OPERATORS[name]) return el('mo', OPERATORS[name]);
@@ -318,7 +336,7 @@ class Parser {
     if (SPACES[name] != null) return el('mtext', NBSP.repeat(SPACES[name]));
     if (name === '{' || name === '}') return el('mo', name);
 
-    throw new Error(`지원하지 않는 명령입니다: \\${name}`);
+    throw new LatexSyntaxError('unsupportedCommand', { name });
   }
 
   /** \left ( … \right ) — 신축 괄호. MathML Core 연산자 사전이 mrow 안에서 자동 신축. */
@@ -327,7 +345,7 @@ class Parser {
     const inner = this.parseSequence((tk) => tk.type === 'cmd' && tk.value === 'right');
     const rightCmd = this.next();
     if (!rightCmd || rightCmd.type !== 'cmd' || rightCmd.value !== 'right') {
-      throw new Error('\\left 에 대응하는 \\right 가 없습니다.');
+      throw new LatexSyntaxError('leftWithoutRight');
     }
     const close = el('mo', this.readDelimiter('right'));
     const children = [open, ...inner, close];
@@ -340,10 +358,10 @@ class Parser {
   /** \left/\right 다음의 구분자 토큰을 읽는다. */
   readDelimiter(which) {
     const t = this.next();
-    if (!t) throw new Error(`\\${which} 의 구분자가 없습니다.`);
+    if (!t) throw new LatexSyntaxError('missingDelimiter', { which });
     if (t.type === 'op') return t.value; // ( ) [ ] | .
     if (t.type === 'cmd' && DELIM_COMMANDS[t.value]) return DELIM_COMMANDS[t.value];
-    throw new Error(`\\${which} 뒤에 올 수 없는 구분자입니다.`);
+    throw new LatexSyntaxError('invalidDelimiter', { which });
   }
 }
 
@@ -354,16 +372,16 @@ class Parser {
  * @param {string} latex 수식 원문
  * @param {{display?: boolean}} [options] display: true 면 블록 수식
  * @returns {Element} MathML <math> 요소 (data-we-formula 에 원문 보존)
- * @throws {Error} 미지원 명령, 괄호 불일치, 빈 입력
+ * @throws {LatexSyntaxError} 미지원 명령, 괄호 불일치, 빈 입력 — code 로 구분(문구는 호출부가 i18n)
  */
 export function latexToMathML(latex, options = {}) {
   const source = String(latex ?? '').trim();
-  if (!source) throw new Error('수식을 입력하세요.');
+  if (!source) throw new LatexSyntaxError('empty');
 
   const parser = new Parser(tokenize(source));
   const nodes = parser.parseSequence();
-  if (parser.peek()) throw new Error('짝이 없는 } 가 있습니다.');
-  if (!nodes.length) throw new Error('수식을 입력하세요.');
+  if (parser.peek()) throw new LatexSyntaxError('unmatchedCloseBrace');
+  if (!nodes.length) throw new LatexSyntaxError('empty');
 
   const math = el('math', null, nodes);
   math.setAttribute('display', options.display ? 'block' : 'inline');

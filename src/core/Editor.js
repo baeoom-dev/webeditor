@@ -20,23 +20,25 @@ import { TableToolbar } from '../features/table-edit.js';
 import { toggleInlineCode, insertCodeBlock, handleCodeBlockEnter } from '../features/code.js';
 import { handlePaste } from '../clipboard/paste.js';
 import { sanitizeHtml } from '../security/sanitizer.js';
+import { createT } from '../i18n/createT.js';
 
 const DEFAULT_FONT_SIZES = ['12px', '14px', '16px', '18px', '24px', '32px'];
 // 기본 글꼴 목록(사용 빈도순). '기본' 은 에디터 기본 스택(한글·영문 시스템 폰트)으로 되돌린다.
 // 맑은 고딕은 Windows 시스템 폰트(웹폰트 배포 불가), 나머지는 webeditor-fonts.css 로 로드.
 // 본고딕/본명조 = Noto Sans/Serif KR 의 공식 한국어 이름(Adobe: Source Han Sans/Serif).
+// labelKey 는 i18n 카탈로그(font.*)로 번역된다. 호스트가 넘긴 목록은 label 을 그대로 쓴다.
 const DEFAULT_FONT_FAMILIES = [
   {
-    label: '기본',
+    labelKey: 'font.default',
     value:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif',
   },
   { label: 'Pretendard', value: 'Pretendard, "Pretendard Variable", sans-serif' },
-  { label: '본고딕', value: '"Noto Sans KR", "Noto Sans", sans-serif' },
-  { label: '맑은 고딕', value: '"Malgun Gothic", "맑은 고딕", sans-serif' },
-  { label: '나눔고딕', value: '"Nanum Gothic", "나눔고딕", sans-serif' },
-  { label: '본명조', value: '"Noto Serif KR", serif' },
-  { label: '나눔명조', value: '"Nanum Myeongjo", "나눔명조", serif' },
+  { labelKey: 'font.notoSansKr', value: '"Noto Sans KR", "Noto Sans", sans-serif' },
+  { labelKey: 'font.malgunGothic', value: '"Malgun Gothic", "맑은 고딕", sans-serif' },
+  { labelKey: 'font.nanumGothic', value: '"Nanum Gothic", "나눔고딕", sans-serif' },
+  { labelKey: 'font.notoSerifKr', value: '"Noto Serif KR", serif' },
+  { labelKey: 'font.nanumMyeongjo', value: '"Nanum Myeongjo", "나눔명조", serif' },
 ];
 const DEFAULT_FEATURES = [
   'bold', 'italic', 'underline', 'strikethrough', 'code', 'fontFamily', 'fontSize', 'color', 'backColor',
@@ -57,17 +59,25 @@ export class Editor {
    * @param {number} [config.minHeight=240] 최소 높이(px)
    * @param {string[]} [config.fontSizes] 폰트 크기 목록
    * @param {string[]} [config.features] 활성화할 기능 목록
+   * @param {string} [config.locale='ko'] UI 언어('ko' | 'en' | 기타). 내장에 없으면 messages → ko 폴백
+   * @param {object} [config.messages] UI 문구 부분 override 또는 새 언어 전체
    * @param {(editor: Editor) => void} [config.onChange] 변경 콜백
    */
   constructor(target, config = {}) {
     const root = typeof target === 'string' ? document.querySelector(target) : target;
+    // 개발자용 예외(설정 이전 단계) — i18n 카탈로그 대상이 아니다.
     if (!root) throw new Error('Editor: 마운트 대상을 찾을 수 없습니다.');
+
+    // UI 언어. 인스턴스 스코프 t() 를 만들어 _ctx() 와 UI 클래스로 전달한다.
+    const i18n = createT({ locale: config.locale, messages: config.messages });
+    this.t = i18n.t;
+    this.locale = i18n.locale;
 
     this.config = {
       allowDataUrlFallback: true,
       maxImageSizeMB: 10,
-      placeholder: '내용을 입력하세요…',
-      ariaLabel: '본문 편집기',
+      placeholder: this.t('editor.placeholder'),
+      ariaLabel: this.t('editor.ariaLabel'),
       minHeight: 240,
       theme: 'auto',
       fontSizes: DEFAULT_FONT_SIZES,
@@ -85,6 +95,8 @@ export class Editor {
 
     this.container = document.createElement('div');
     this.container.className = 'we-editor';
+    // UI 언어를 스크린리더에 알린다. 본문(content)에는 stamp 하지 않는다 — 본문 언어는 UI 와 다를 수 있다.
+    this.container.setAttribute('lang', this.locale);
 
     this.content = document.createElement('div');
     // we-content: 콘텐츠 렌더링 스타일 클래스(출력 페이지에서도 동일 클래스로 재사용).
@@ -104,7 +116,7 @@ export class Editor {
     // 소스보기용 textarea (평소엔 숨김).
     this.sourceArea = document.createElement('textarea');
     this.sourceArea.className = 'we-source-area';
-    this.sourceArea.setAttribute('aria-label', 'HTML 소스 편집');
+    this.sourceArea.setAttribute('aria-label', this.t('editor.sourceAriaLabel'));
     this.sourceArea.setAttribute('spellcheck', 'false');
     this.sourceArea.hidden = true;
     this.sourceArea.style.minHeight = `${this.config.minHeight}px`;
@@ -120,6 +132,8 @@ export class Editor {
       this._tableToolbar = new TableToolbar({
         root: this.content,
         onChange: () => this._emitChange(),
+        t: this.t,
+        locale: this.locale,
       });
     }
 
@@ -222,7 +236,7 @@ export class Editor {
     const isDark = effective === 'dark';
     btn.innerHTML = isDark ? icons.moon : icons.sun;
     // 아이콘은 현재 모드, 라벨은 클릭 시 동작을 함께 안내(접근성).
-    const label = isDark ? '다크 모드 (클릭 시 라이트로 전환)' : '라이트 모드 (클릭 시 다크로 전환)';
+    const label = isDark ? this.t('toolbar.themeDark') : this.t('toolbar.themeLight');
     btn.setAttribute('aria-label', label);
     btn.setAttribute('title', label);
     btn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
@@ -258,6 +272,8 @@ export class Editor {
     return {
       selection: this.selection,
       config: this.config,
+      t: this.t,
+      locale: this.locale,
       onChange: () => this._emitChange(),
       insertImageFile: (file) => this._safeInsertImageFile(file),
     };
@@ -267,7 +283,7 @@ export class Editor {
     try {
       await insertImageFile(file, this._ctx());
     } catch (err) {
-      this._notify(err instanceof Error ? err.message : '이미지 삽입에 실패했습니다.');
+      this._notify(err instanceof Error ? err.message : this.t('image.errorInsert'));
     }
   }
 
@@ -309,52 +325,53 @@ export class Editor {
 
   _buildToolbar() {
     const has = (f) => this.config.features.includes(f);
+    const t = this.t;
     const groups = [];
 
     // 관례(Google Docs 등)에 따라 실행 취소/다시 실행을 맨 앞에 둔다.
     const historyGroup = [];
-    if (has('undo')) historyGroup.push(this._item('undo', icons.undo, '실행 취소 (Ctrl+Z)', () => this._run(commands.undo)));
-    if (has('redo')) historyGroup.push(this._item('redo', icons.redo, '다시 실행 (Ctrl+Y)', () => this._run(commands.redo)));
+    if (has('undo')) historyGroup.push(this._item('undo', icons.undo, t('toolbar.undo'), () => this._run(commands.undo)));
+    if (has('redo')) historyGroup.push(this._item('redo', icons.redo, t('toolbar.redo'), () => this._run(commands.redo)));
     if (historyGroup.length) groups.push(historyGroup);
 
     const inline = [];
-    if (has('bold')) inline.push(this._item('bold', icons.bold, '굵게 (Ctrl+B)', () => this._run(commands.bold), 'bold'));
-    if (has('italic')) inline.push(this._item('italic', icons.italic, '기울임 (Ctrl+I)', () => this._run(commands.italic), 'italic'));
-    if (has('underline')) inline.push(this._item('underline', icons.underline, '밑줄 (Ctrl+U)', () => this._run(commands.underline), 'underline'));
-    if (has('strikethrough')) inline.push(this._item('strikethrough', icons.strike, '취소선', () => this._run(commands.strikethrough), 'strikeThrough'));
-    if (has('code')) inline.push(this._item('code', icons.codeInline, '인라인 코드', () => this._run(() => toggleInlineCode(this.content))));
+    if (has('bold')) inline.push(this._item('bold', icons.bold, t('toolbar.bold'), () => this._run(commands.bold), 'bold'));
+    if (has('italic')) inline.push(this._item('italic', icons.italic, t('toolbar.italic'), () => this._run(commands.italic), 'italic'));
+    if (has('underline')) inline.push(this._item('underline', icons.underline, t('toolbar.underline'), () => this._run(commands.underline), 'underline'));
+    if (has('strikethrough')) inline.push(this._item('strikethrough', icons.strike, t('toolbar.strikethrough'), () => this._run(commands.strikethrough), 'strikeThrough'));
+    if (has('code')) inline.push(this._item('code', icons.codeInline, t('toolbar.code'), () => this._run(() => toggleInlineCode(this.content))));
     if (inline.length) groups.push(inline);
 
     const fontGroup = [];
-    if (has('color')) fontGroup.push(this._colorItem('color', icons.color, '글자 색', (c) => commands.foreColor(c)));
-    if (has('backColor')) fontGroup.push(this._colorItem('backColor', icons.bgColor, '배경 색', (c) => commands.backColor(c)));
+    if (has('color')) fontGroup.push(this._colorItem('color', icons.color, t('toolbar.color'), (c) => commands.foreColor(c)));
+    if (has('backColor')) fontGroup.push(this._colorItem('backColor', icons.bgColor, t('toolbar.backColor'), (c) => commands.backColor(c)));
     if (fontGroup.length) groups.push(fontGroup);
 
     // 문단 그룹: 정렬(드롭다운 1개) + 목록/들여쓰기.
     const paragraphGroup = [];
     if (has('align')) paragraphGroup.push(this._alignItem());
-    if (has('ul')) paragraphGroup.push(this._item('ul', icons.ul, '글머리 기호 목록', () => this._run(commands.unorderedList)));
-    if (has('ol')) paragraphGroup.push(this._item('ol', icons.ol, '번호 매기기 목록', () => this._run(commands.orderedList)));
-    if (has('outdent')) paragraphGroup.push(this._item('outdent', icons.outdent, '내어쓰기', () => this._run(commands.outdent)));
-    if (has('indent')) paragraphGroup.push(this._item('indent', icons.indent, '들여쓰기', () => this._run(commands.indent)));
+    if (has('ul')) paragraphGroup.push(this._item('ul', icons.ul, t('toolbar.ul'), () => this._run(commands.unorderedList)));
+    if (has('ol')) paragraphGroup.push(this._item('ol', icons.ol, t('toolbar.ol'), () => this._run(commands.orderedList)));
+    if (has('outdent')) paragraphGroup.push(this._item('outdent', icons.outdent, t('toolbar.outdent'), () => this._run(commands.outdent)));
+    if (has('indent')) paragraphGroup.push(this._item('indent', icons.indent, t('toolbar.indent'), () => this._run(commands.indent)));
     if (paragraphGroup.length) groups.push(paragraphGroup);
 
     const insertGroup = [];
-    if (has('link')) insertGroup.push(this._item('link', icons.link, '링크', () => openLinkDialog(this._ctx())));
-    if (has('image')) insertGroup.push(this._item('image', icons.image, '이미지', () => openImageDialog(this._ctx())));
-    if (has('table')) insertGroup.push(this._item('table', icons.table, '표', () => openTableDialog(this._ctx())));
-    if (has('codeBlock')) insertGroup.push(this._item('codeBlock', icons.codeBlock, '코드 블록', () => this._run(() => insertCodeBlock(this.content))));
-    if (has('formula')) insertGroup.push(this._item('formula', icons.formula, '수식', () => openFormulaDialog(this._ctx())));
+    if (has('link')) insertGroup.push(this._item('link', icons.link, t('toolbar.link'), () => openLinkDialog(this._ctx())));
+    if (has('image')) insertGroup.push(this._item('image', icons.image, t('toolbar.image'), () => openImageDialog(this._ctx())));
+    if (has('table')) insertGroup.push(this._item('table', icons.table, t('toolbar.table'), () => openTableDialog(this._ctx())));
+    if (has('codeBlock')) insertGroup.push(this._item('codeBlock', icons.codeBlock, t('toolbar.codeBlock'), () => this._run(() => insertCodeBlock(this.content))));
+    if (has('formula')) insertGroup.push(this._item('formula', icons.formula, t('toolbar.formula'), () => openFormulaDialog(this._ctx())));
     if (has('emoji')) insertGroup.push(this._emojiItem());
     if (insertGroup.length) groups.push(insertGroup);
 
     const utilGroup = [];
-    if (has('removeFormat')) utilGroup.push(this._item('removeFormat', icons.clear, '서식 지우기', () => this._run(commands.removeFormat)));
+    if (has('removeFormat')) utilGroup.push(this._item('removeFormat', icons.clear, t('toolbar.removeFormat'), () => this._run(commands.removeFormat)));
     if (has('sourceView')) {
       utilGroup.push({
         name: 'sourceView',
         icon: icons.code,
-        label: 'HTML 소스 보기',
+        label: t('toolbar.sourceView'),
         toggle: true,
         action: () => this.toggleSource(),
       });
@@ -363,14 +380,14 @@ export class Editor {
       utilGroup.push({
         name: 'theme',
         icon: icons.moon,
-        label: '다크 모드로 전환',
+        label: t('toolbar.theme'),
         toggle: true,
         action: () => this.setTheme(this._effectiveTheme() === 'dark' ? 'light' : 'dark'),
       });
     }
     if (utilGroup.length) groups.push(utilGroup);
 
-    this.toolbar = new Toolbar({ groups, label: '서식 도구 모음' });
+    this.toolbar = new Toolbar({ groups, label: t('toolbar.label') });
 
     // 폰트 글꼴/크기 선택기(네이티브 select — 기본 접근성 우수).
     // 하나의 그룹으로 묶어 실행 취소/다시 실행 그룹 바로 뒤에 끼워 넣는다.
@@ -400,6 +417,8 @@ export class Editor {
   _alignItem() {
     this._alignState = 'alignLeft';
     const picker = new AlignPicker({
+      t: this.t,
+      locale: this.locale,
       getCurrent: () => this._alignState,
       onSelect: (name) => {
         this._run(() => commands[name]());
@@ -410,7 +429,7 @@ export class Editor {
     return {
       name: 'align',
       icon: icons.alignLeft + icons.caret,
-      label: '정렬',
+      label: this.t('align.label'),
       menu: true,
       action: (btn) => {
         this.selection.save();
@@ -437,6 +456,8 @@ export class Editor {
   _colorItem(name, icon, label, apply) {
     const picker = new ColorPicker({
       label,
+      t: this.t,
+      locale: this.locale,
       onSelect: (color) => this._run(() => apply(color)),
     });
     this._pickers.push(picker);
@@ -453,6 +474,8 @@ export class Editor {
 
   _emojiItem() {
     const picker = new EmojiPicker({
+      label: this.t('emoji.label'),
+      locale: this.locale,
       onSelect: (emoji) => {
         this.selection.restore();
         this.selection.insertNode(document.createTextNode(emoji));
@@ -463,7 +486,7 @@ export class Editor {
     return {
       name: 'emoji',
       icon: icons.emoji,
-      label: '이모지',
+      label: this.t('toolbar.emoji'),
       action: (btn) => {
         this.selection.save();
         picker.open(btn);
@@ -476,16 +499,18 @@ export class Editor {
     wrap.className = 'we-fontsize we-fontname';
     const sr = document.createElement('span');
     sr.className = 'we-visually-hidden';
-    sr.textContent = '글꼴';
+    sr.textContent = this.t('font.family');
     const select = document.createElement('select');
     select.className = 'we-fontsize-select we-fontname-select';
-    select.setAttribute('aria-label', '글꼴');
-    const placeholder = new Option('글꼴', '');
+    select.setAttribute('aria-label', this.t('font.family'));
+    const placeholder = new Option(this.t('font.family'), '');
     placeholder.disabled = true;
     placeholder.selected = true;
     select.add(placeholder);
     for (const family of this.config.fontFamilies) {
-      const opt = new Option(family.label, family.value);
+      // labelKey 가 있으면 카탈로그로 번역(내장 목록), 없으면 호스트가 준 label 그대로.
+      const label = family.labelKey ? this.t(family.labelKey) : family.label;
+      const opt = new Option(label, family.value);
       opt.style.fontFamily = family.value; // 목록에서 미리보기
       select.add(opt);
     }
@@ -505,11 +530,11 @@ export class Editor {
     wrap.className = 'we-fontsize';
     const sr = document.createElement('span');
     sr.className = 'we-visually-hidden';
-    sr.textContent = '글자 크기';
+    sr.textContent = this.t('font.size');
     const select = document.createElement('select');
     select.className = 'we-fontsize-select';
-    select.setAttribute('aria-label', '글자 크기');
-    const placeholder = new Option('크기', '');
+    select.setAttribute('aria-label', this.t('font.size'));
+    const placeholder = new Option(this.t('font.sizePlaceholder'), '');
     placeholder.disabled = true;
     placeholder.selected = true;
     select.add(placeholder);
@@ -603,7 +628,9 @@ export class Editor {
   _notify(message) {
     // 간단한 접근성 알림 다이얼로그.
     const dialog = new Dialog({
-      title: '알림',
+      title: this.t('dialog.noticeTitle'),
+      closeLabel: this.t('dialog.close'),
+      lang: this.locale,
       render: (body, close) => {
         const p = document.createElement('p');
         p.textContent = message;
@@ -612,7 +639,7 @@ export class Editor {
         const ok = document.createElement('button');
         ok.type = 'button';
         ok.className = 'we-btn we-btn-primary';
-        ok.textContent = '확인';
+        ok.textContent = this.t('dialog.ok');
         ok.addEventListener('click', close);
         actions.appendChild(ok);
         body.append(p, actions);

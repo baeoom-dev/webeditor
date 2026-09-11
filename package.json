@@ -1,6 +1,6 @@
 {
   "name": "@baeoom-dev/webeditor",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "보안(XSS 방지)과 웹접근성을 최우선으로 한 Vanilla JS WYSIWYG 에디터. 엑셀 표 서식 보존 지원.",
   "repository": {
     "type": "git",
@@ -35,6 +35,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "python3 -m http.server 8791",
+    "lint:i18n": "node scripts/check-i18n.mjs",
+    "test:unit": "node --test 'tests/unit/**/*.test.mjs'",
     "test:e2e": "playwright test",
     "prepublishOnly": "npm run build"
   },

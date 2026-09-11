@@ -13,8 +13,15 @@ const EMOJIS = [
 ];
 
 export class EmojiPicker {
-  /** @param {object} opts @param {(emoji: string) => void} opts.onSelect */
-  constructor({ onSelect }) {
+  /**
+   * @param {object} opts
+   * @param {string} opts.label 팝오버 접근성 라벨(i18n: emoji.label)
+   * @param {string} [opts.locale] UI 언어 — body 직속 팝오버에 stamp
+   * @param {(emoji: string) => void} opts.onSelect
+   */
+  constructor({ label, locale, onSelect }) {
+    this.label = label;
+    this.lang = locale;
     this.onSelect = onSelect;
     this._popover = null;
     this._onDocDown = this._onDocDown.bind(this);
@@ -25,7 +32,8 @@ export class EmojiPicker {
     const pop = document.createElement('div');
     pop.className = 'we-emoji-popover';
     pop.setAttribute('role', 'dialog');
-    pop.setAttribute('aria-label', '이모지 선택');
+    pop.setAttribute('aria-label', this.label);
+    if (this.lang) pop.setAttribute('lang', this.lang);
 
     const grid = document.createElement('div');
     grid.className = 'we-emoji-grid';
