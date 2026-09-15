@@ -15,6 +15,7 @@ import {
   ALLOWED_IMG_SCHEMES,
   ALLOWED_DATA_MIME,
   CSS_VALUE_BLOCKLIST,
+  STYLE_PLACEHOLDER,
 } from './schema.js';
 
 export const MATHML_NS = 'http://www.w3.org/1998/Math/MathML';
@@ -45,10 +46,19 @@ function isSafeUrl(url, allowedSchemes, dataMimeCheck) {
 const DIMENSION_PROPS = new Set(['width', 'height']);
 const SAFE_DIMENSION = /^(auto|-?\d+(\.\d+)?(px|pt|%|em|rem|cm|mm)?)$/i;
 
-/** style 속성 문자열을 CSS 화이트리스트로 필터링해 재작성한다. */
+/**
+ * style 속성 문자열을 CSS 화이트리스트로 필터링해 재작성한다.
+ * 템플릿 치환 토큰(`#{이름}`)이 선언 하나를 통째로 차지하면 원문 그대로 보존한다 —
+ * 호스트 템플릿이 렌더 시 실제 선언으로 바꾸는 자리표시자다(schema.STYLE_PLACEHOLDER).
+ */
 function sanitizeStyle(styleText) {
   const safe = [];
   for (const decl of String(styleText).split(';')) {
+    const trimmed = decl.trim();
+    if (STYLE_PLACEHOLDER.test(trimmed)) {
+      safe.push(trimmed);
+      continue;
+    }
     const idx = decl.indexOf(':');
     if (idx === -1) continue;
     const prop = decl.slice(0, idx).trim().toLowerCase();

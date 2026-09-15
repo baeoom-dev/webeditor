@@ -1,6 +1,6 @@
 {
   "name": "@baeoom-dev/webeditor",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "보안(XSS 방지)과 웹접근성을 최우선으로 한 Vanilla JS WYSIWYG 에디터. 엑셀 표 서식 보존 지원.",
   "repository": {
     "type": "git",

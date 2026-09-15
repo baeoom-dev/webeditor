@@ -68,6 +68,9 @@ src/
 
 3. **허용 정책 변경은 오직 `src/security/schema.js` 에서만 한다.** 태그/속성/CSS 속성/URL
    스킴을 추가·제거할 때 다른 파일에 흩뿌리지 말 것 — 감사(audit) 가능성을 위해 한 곳에 모은다.
+   `style` 안의 템플릿 치환 토큰(`#{이름}`)도 여기의 `STYLE_PLACEHOLDER` 가 단일 정책이다 —
+   호스트 템플릿(메일 알림 등)이 렌더 시 실제 선언으로 바꾸는 자리표시자로, 선언 하나가 통째로
+   이 패턴일 때만 `sanitizeStyle` 이 원문 통과시킨다. 허용 문자를 넓히지 말 것(`;` `:` `(` `<` `\` 차단).
 
 4. **UI 문구(i18n 카탈로그·호스트 `messages`)는 `textContent`/`setAttribute` 로만 DOM 에 넣는다.
    `innerHTML` 금지.** 문구는 호스트 입력(`messages` 옵션)이 될 수 있으므로 아이콘 SVG 와 문자열로

@@ -85,3 +85,10 @@ export const ALLOWED_DATA_MIME = /^data:image\/(png|jpe?g|gif|webp|avif|bmp|svg\
 
 // CSS 값에 하나라도 포함되면 해당 선언을 폐기하는 위험 패턴.
 export const CSS_VALUE_BLOCKLIST = /url\s*\(|expression\s*\(|javascript:|vbscript:|@import|<|>|\\/i;
+
+// style 속성 안의 템플릿 치환 토큰(예: `style="color: red; #{노출제어_중간고사}"`).
+// 호스트 템플릿 엔진이 렌더 시점에 실제 CSS 선언으로 바꾸는 자리표시자다.
+// `prop: value` 꼴이 아니라 CSS 문법상 무효 선언이므로 브라우저는 그대로 무시한다.
+// 토큰 이름은 문자·숫자·`_ . -` 로만 제한해 `;` `:` `(` `<` `\` 등 삽입 벡터를 차단한다.
+// 선언 하나가 통째로 이 패턴과 일치할 때만 원문 그대로 통과시킨다(sanitizer.sanitizeStyle).
+export const STYLE_PLACEHOLDER = /^#\{[\p{L}\p{N}_.\-]+\}$/u;
